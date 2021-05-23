@@ -16,6 +16,7 @@
  *
  */
 #ifdef CONFIG_TAS256X_REGMAP
+
 #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/err.h>
