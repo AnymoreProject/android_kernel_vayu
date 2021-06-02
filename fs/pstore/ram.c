@@ -408,23 +408,7 @@ static int notrace ramoops_pstore_write(struct pstore_record *record)
 		persistent_ram_write(cxt->fprzs[zonenum], record->buf,
 				     record->size);
 		return 0;
-	} else if (record->type == PSTORE_TYPE_PMSG) {
-		pr_warn_ratelimited("PMSG shouldn't call %s\n", __func__);
-		return -EINVAL;
 	}
-
-	if (record->type != PSTORE_TYPE_DMESG)
-		return -EINVAL;
-
-	/*
-	 * We could filter on record->reason here if we wanted to (which
-	 * would duplicate what happened before the "max_reason" setting
-	 * was added), but that would defeat the purpose of a system
-	 * changing printk.always_kmsg_dump, so instead log everything that
-	 * the kmsg dumper sends us, since it should be doing the filtering
-	 * based on the combination of printk.always_kmsg_dump and our
-	 * requested "max_reason".
-	 */
 
 	/*
 	 * Explicitly only take the first part of any new crash.
