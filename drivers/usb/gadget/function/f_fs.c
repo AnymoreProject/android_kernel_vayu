@@ -2129,11 +2129,12 @@ static int ffs_func_eps_enable(struct ffs_function *func)
 	ep = func->eps;
 	epfile = ffs->epfiles;
 	count = ffs->eps_count;
+	if (!epfile) {
+		ret = -ENOMEM;
+		goto done;
+	}
 
-	ffs_log("enter: state %d setup_state %d flag %lu", func->ffs->state,
-		func->ffs->setup_state, func->ffs->flags);
-
-	while(count--) {
+	while (count--) {
 		ep->ep->driver_data = ep;
 
 		ret = config_ep_by_speed(func->gadget, &func->function, ep->ep);
@@ -2159,6 +2160,7 @@ static int ffs_func_eps_enable(struct ffs_function *func)
 	}
 
 	wake_up_interruptible(&ffs->wait);
+done:
 	spin_unlock_irqrestore(&func->ffs->eps_lock, flags);
 
 	return ret;
