@@ -1,0 +1,4 @@
+[submodule "KernelSU-Next"]
+	path = KernelSU-Next
+	branch = hookless
+	url = https://github.com/KernelSU-Next/KernelSU-Next
