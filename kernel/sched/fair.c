@@ -7238,6 +7238,10 @@ static int select_idle_cpu(struct task_struct *p, struct sched_domain *sd, int t
 	return cpu;
 }
 
+#ifdef CONFIG_SCHED_POC_SELECTOR
+#include "poc_selector.c"
+#endif
+
 /*
  * Try and locate an idle core/thread in the LLC cache domain.
  */
@@ -7260,6 +7264,33 @@ static inline int __select_idle_sibling(struct task_struct *p, int prev, int tar
 	if (!sd)
 		return target;
 
+#ifdef CONFIG_SCHED_POC_SELECTOR
+	{
+		struct sched_domain_shared *sd_share =
+			rcu_dereference(per_cpu(sd_llc_shared, target));
+			
+		if (static_branch_likely(&poc_selector_active) && 
+		    sd_share && likely(sd_share->poc_fast_eligible)) {
+			/*
+			 * POC Selector Fast Path
+			 * recent_used_cpu diset -1 dan sync diset 0 untuk kompatibilitas 4.14
+			 */
+			int poc_cpu = select_idle_cpu_poc(target, prev,
+					-1, 0, sd_share, p->cpus_ptr);
+					
+			if (poc_cpu >= 0) {
+				return poc_cpu;
+			}
+			
+			/* Jika POC mengembalikan -2 (overload), lewati pencarian lambat CFS */
+			if (poc_cpu == -2)
+				goto give_up;
+		}
+		
+		poc_count(POC_FALLBACK);
+	}
+#endif /* CONFIG_SCHED_POC_SELECTOR */
+
 	i = select_idle_core(p, sd, target);
 	if ((unsigned)i < nr_cpumask_bits)
 		return i;
@@ -7272,6 +7303,9 @@ static inline int __select_idle_sibling(struct task_struct *p, int prev, int tar
 	if ((unsigned)i < nr_cpumask_bits)
 		return i;
 
+#ifdef CONFIG_SCHED_POC_SELECTOR
+give_up:
+#endif
 	return target;
 }
 
