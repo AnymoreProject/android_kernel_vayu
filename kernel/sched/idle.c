@@ -244,7 +244,7 @@ static void do_idle(void)
 
 #ifdef CONFIG_SCHED_POC_SELECTOR
 	/* POC Selector: tandai CPU sebagai idle (1) di dalam bitmap */
-	set_cpu_idle_state_poc(cpu, 1);
+	set_cpu_idle_state_poc(smp_processor_id(), 1);
 #endif /* CONFIG_SCHED_POC_SELECTOR */
 
 	while (!need_resched()) {
@@ -277,7 +277,7 @@ static void do_idle(void)
 
 #ifdef CONFIG_SCHED_POC_SELECTOR
 	/* POC Selector: tandai CPU sebagai sibuk (0) karena keluar dari idle */
-	set_cpu_idle_state_poc(cpu, 0);
+	set_cpu_idle_state_poc(smp_processor_id(), 0);
 #endif /* CONFIG_SCHED_POC_SELECTOR */
 
 	/*

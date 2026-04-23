@@ -7276,7 +7276,7 @@ static inline int __select_idle_sibling(struct task_struct *p, int prev, int tar
 			 * recent_used_cpu diset -1 dan sync diset 0 untuk kompatibilitas 4.14
 			 */
 			int poc_cpu = select_idle_cpu_poc(target, prev,
-					-1, 0, sd_share, p->cpus_ptr);
+					-1, 0, sd_share, &p->cpus_allowed);
 					
 			if (poc_cpu >= 0) {
 				return poc_cpu;

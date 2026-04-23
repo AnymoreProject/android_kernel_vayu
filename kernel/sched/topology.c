@@ -1384,8 +1384,16 @@ sd_init(struct sched_domain_topology_level *tl,
 
 #ifdef CONFIG_SCHED_POC_SELECTOR
 	{
-		int range = cpumask_last(sd_span) - sd_id + 1;
 		int cpu_iter;
+		int max_cpu = sd_id;
+		int range;
+
+		/* Cari ID CPU paling ujung (last) secara manual untuk kernel 4.14 */
+		for_each_cpu(cpu_iter, sched_domain_span(sd)) {
+			if (cpu_iter > max_cpu)
+				max_cpu = cpu_iter;
+		}
+		range = max_cpu - sd_id + 1;
 
 		sd->shared->poc_cpu_base = sd_id;
 		sd->shared->poc_affinity_shift = sd_id & 63;
@@ -1414,7 +1422,7 @@ sd_init(struct sched_domain_topology_level *tl,
 
 		/* Build LLC member bitmask for reader-side aggregation */
 		sd->shared->poc_llc_members = 0;
-		for_each_cpu(cpu_iter, sd_span) {
+		for_each_cpu(cpu_iter, sched_domain_span(sd)) {
 			int bit = cpu_iter - sd_id;
 
 			if ((unsigned int)bit < 64)
@@ -1426,7 +1434,7 @@ sd_init(struct sched_domain_topology_level *tl,
 		memset(sd->shared->poc_smt_mask, 0,
 		       sizeof(sd->shared->poc_smt_mask));
 		if (sd->shared->poc_fast_eligible) {
-			for_each_cpu(cpu_iter, sd_span) {
+			for_each_cpu(cpu_iter, sched_domain_span(sd)) {
 				int bit = cpu_iter - sd_id;
 				int sibling;
 				u64 mask = 0;
@@ -1450,7 +1458,7 @@ sd_init(struct sched_domain_topology_level *tl,
 				int uniform_stride = -1;
 				u64 primary_mask = 0;
 
-				for_each_cpu(cpu_iter, sd_span) {
+				for_each_cpu(cpu_iter, sched_domain_span(sd)) {
 					int bit = cpu_iter - sd_id;
 					u64 mask;
 					int ways, lo, hi, stride;
