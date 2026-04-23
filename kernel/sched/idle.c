@@ -242,6 +242,11 @@ static void do_idle(void)
 	quiet_vmstat();
 	tick_nohz_idle_enter();
 
+#ifdef CONFIG_SCHED_POC_SELECTOR
+	/* POC Selector: tandai CPU sebagai idle (1) di dalam bitmap */
+	set_cpu_idle_state_poc(smp_processor_id(), 1);
+#endif /* CONFIG_SCHED_POC_SELECTOR */
+
 	while (!need_resched()) {
 		check_pgt_cache();
 		rmb();
@@ -269,6 +274,11 @@ static void do_idle(void)
 		}
 		arch_cpu_idle_exit();
 	}
+
+#ifdef CONFIG_SCHED_POC_SELECTOR
+	/* POC Selector: tandai CPU sebagai sibuk (0) karena keluar dari idle */
+	set_cpu_idle_state_poc(smp_processor_id(), 0);
+#endif /* CONFIG_SCHED_POC_SELECTOR */
 
 	/*
 	 * Since we fell out of the loop above, we know TIF_NEED_RESCHED must

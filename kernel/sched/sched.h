@@ -805,6 +805,9 @@ struct rq {
 	/* capture load from *all* tasks on this cpu: */
 	struct load_weight load;
 	unsigned long nr_load_updates;
+#ifdef CONFIG_SCHED_POC_SELECTOR
+	unsigned int		poc_idle_committed;
+#endif
 	u64 nr_switches;
 
 	struct cfs_rq cfs;
@@ -1441,8 +1444,84 @@ static inline struct task_group *task_group(struct task_struct *p)
 
 #endif /* CONFIG_CGROUP_SCHED */
 
+#ifdef CONFIG_SCHED_POC_SELECTOR
+extern struct static_key_true poc_selector_active;
+extern struct static_key_true sched_poc_aligned;
+extern struct static_key_true sched_poc_smt_consecutive;
+extern struct static_key_true sched_poc_smt_uniform;
+extern struct static_key_false sched_poc_target_sticky;
+extern struct static_key_true sched_poc_eager_commit;
+extern struct static_key_true sched_poc_packed;
+extern struct static_key_false sched_poc_lockless_bitmap;
+extern void __set_cpu_idle_state_poc(int cpu, int state);
+
+static __always_inline void set_cpu_idle_state_poc(int cpu, int state)
+{
+	/* Di 4.14 kita abaikan pengecekan asym_cpucap_active */
+	if (static_branch_likely(&poc_selector_active))
+		__set_cpu_idle_state_poc(cpu, state);
+}
+
+/*
+ * POC_CTZ64 - Count trailing zeros (find first set bit)
+ */
+#if defined(__x86_64__) && defined(__BMI__)
+#define POC_CTZ64(v) ((int)__builtin_ctzll(v))
+#elif defined(__aarch64__)
+#define POC_CTZ64(v) ((int)__builtin_ctzll(v))
+#elif defined(__riscv) && defined(__riscv_zbb)
+#define POC_CTZ64(v) ((int)__builtin_ctzll(v))
+#elif defined(__x86_64__)
+static __always_inline int poc_ctz64_bsf(u64 v)
+{
+	if (unlikely(!v)) return 64;
+	return (int)__builtin_ctzll(v);
+}
+#define POC_CTZ64(v) poc_ctz64_bsf(v)
+#else
+#define POC_DEBRUIJN_CTZ64_CONST 0x03F79D71B4CA8B09ULL
+static const u8 poc_debruijn_ctz64_tab[64] = {
+	 0,  1, 56,  2, 57, 49, 28,  3, 61, 58, 42, 50, 38, 29, 17,  4,
+	62, 47, 59, 36, 45, 43, 51, 22, 53, 39, 33, 30, 24, 18, 12,  5,
+	63, 55, 48, 27, 60, 41, 37, 16, 46, 35, 44, 21, 52, 32, 23, 11,
+	54, 26, 40, 15, 34, 20, 31, 10, 25, 14, 19,  9, 13,  8,  7,  6,
+};
+static __always_inline int poc_debruijn_ctz64(u64 v)
+{
+	u64 lsb;
+	u32 idx;
+	if (unlikely(!v)) return 64;
+	lsb = v & (-(s64)v);
+	idx = (u32)((lsb * POC_DEBRUIJN_CTZ64_CONST) >> 58);
+	return (int)poc_debruijn_ctz64_tab[idx & 63];
+}
+#define POC_CTZ64(v) poc_debruijn_ctz64(v)
+#endif
+
+static __always_inline u64 poc_cpumask_to_u64(const struct cpumask *mask,
+					      struct sched_domain_shared *sd_share)
+{
+	int base = sd_share->poc_cpu_base;
+	int base_word = base >> 6;
+
+	if (static_branch_likely(&sched_poc_aligned)) {
+		return cpumask_bits(mask)[base_word];
+	} else {
+		int shift = sd_share->poc_affinity_shift;
+		u64 lo = cpumask_bits(mask)[base_word];
+		u64 hi = cpumask_bits(mask)[base_word + 1];
+		return (lo >> shift) | (hi << (64 - shift));
+	}
+}
+#endif /* CONFIG_SCHED_POC_SELECTOR */
+
 static inline void __set_task_cpu(struct task_struct *p, unsigned int cpu)
 {
+#ifdef CONFIG_SCHED_POC_SELECTOR
+	/* Jika CPU sedang idle, kita tandai menjadi sibuk (0) karena akan menerima task */
+	if (cpu_rq(cpu)->idle_stamp)
+		set_cpu_idle_state_poc(cpu, 0);
+#endif
 	set_task_rq(p, cpu);
 #ifdef CONFIG_SMP
 	/*
