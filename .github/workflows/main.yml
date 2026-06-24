@@ -1,0 +1,116 @@
+name: Build Anymore Kernel vayu
+run-name: ${{ inputs.input-run-name || 'Manual Run' }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      input-run-name:
+        description: 'Название сборки (опционально)'
+        required: false
+        default: 'Anymore vayu Build'
+      ksu:
+        description: 'Включить KernelSU Next?'
+        required: true
+        type: choice
+        options:
+          - Include
+          - Exclude
+        default: Include
+      ksu-repo:
+        description: 'Репозиторий KernelSU Next'
+        required: false
+        default: 'https://github.com/sidex15/KernelSU-Next'
+      ksu-branch:
+        description: 'Ветка KernelSU Next'
+        required: false
+        default: 'legacy-susfs-v2'
+      jobs:
+        description: 'Параллельные потоки (JOBS)'
+        required: false
+        default: '24'
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            git curl wget build-essential gcc make bc bison flex \
+            libssl-dev libelf-dev libncurses5-dev python3 zip unzip cpio rsync lld
+
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Download Neutron Clang
+        run: |
+          mkdir -p "$HOME/toolchains/neutron-clang"
+          cd "$HOME/toolchains/neutron-clang"
+          curl -LO "https://raw.githubusercontent.com/Neutron-Toolchains/antman/main/antman"
+          chmod +x antman
+          ./antman -S
+
+      - name: Integrate KernelSU Next (If requested)
+        if: ${{ inputs.ksu == 'Include' }}
+        run: |
+          git clone --depth 1 --branch ${{ inputs.ksu-branch }} ${{ inputs.ksu-repo }} KernelSU
+          # Накатываем драйверную часть KernelSU в дерево ядра
+          cp -r KernelSU/kernel/* ./
+          echo "obj-y += KernelSU/" >> drivers/Makefile
+
+      - name: Git Clone AnyKernel3
+        run: |
+          git clone --depth 1 https://github.com/osm0sis/AnyKernel3 AnyKernel3
+
+      - name: Build kernel
+        run: |
+          export PATH="$HOME/toolchains/neutron-clang/bin:$PATH"
+          export ARCH=arm64
+          export SUBARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          export CROSS_COMPILE_ARM32=arm-linux-gnueabihf-
+          export LD=ld.lld
+          export CC=clang
+          export AR=llvm-ar
+          export NM=llvm-nm
+          export OBJCOPY=llvm-objcopy
+          export OBJDUMP=llvm-objdump
+          export STRIP=llvm-strip
+
+          # Подтягиваем дефконфиг
+          make O=out vayu_defconfig
+
+          # Если выбран KSU, гарантируем его активацию в конфиге в рантайме
+          if [ "${{ inputs.ksu }}" = "Include" ]; then
+            scripts/config --file out/.config --enable CONFIG_KSU
+            scripts/config --file out/.config --enable CONFIG_KSU_NEXT
+          fi
+
+          # Компиляция
+          make -j${{ inputs.jobs }} O=out
+
+      - name: Pack AnyKernel3 Flashable ZIP
+        run: |
+          if [ -f out/arch/arm64/boot/Image.gz-dtb ]; then
+            cp out/arch/arm64/boot/Image.gz-dtb AnyKernel3/
+          elif [ -f out/arch/arm64/boot/Image ]; then
+            cp out/arch/arm64/boot/Image AnyKernel3/
+          else
+            echo "Error: Kernel Image not found!" && exit 1
+          fi
+          
+          # Настройка базового скрипта AnyKernel3 под vayu
+          cd AnyKernel3
+          sed -i 's/device.name1=maguro/device.name1=vayu/g' anykernel.sh
+          sed -i 's/device.name2=toro/device.name2=bhima/g' anykernel.sh
+          zip -r9 ../Anymore-vayu-Kernel.zip * -x .git README.md
+
+      - name: Upload Flashable Kernel
+        uses: actions/upload-artifact@v4
+        with:
+          name: Anymore-vayu-Kernel-${{ inputs.ksu }}
+          path: Anymore-vayu-Kernel.zip
+          retention-days: 14
