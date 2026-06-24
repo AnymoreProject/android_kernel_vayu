@@ -3,7 +3,7 @@
  *
  *  Copyright (C) 1991, 1992  Linus Torvalds
  */
-
+#include <linux/susfs.h>
 #include <linux/string.h>
 #include <linux/mm.h>
 #include <linux/file.h>
@@ -1075,6 +1075,7 @@ struct file *filp_clone_open(struct file *oldfile)
 EXPORT_SYMBOL(filp_clone_open);
 
 long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
+long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 {
 	struct open_flags op;
 	int fd = build_open_flags(flags, mode, &op);
@@ -1086,6 +1087,21 @@ long do_sys_open(int dfd, const char __user *filename, int flags, umode_t mode)
 	tmp = getname(filename);
 	if (IS_ERR(tmp))
 		return PTR_ERR(tmp);
+
+#ifdef CONFIG_SUSFS
+	/* SusFS: Перехват путей открытия для редиректа или спуфинга */
+	if (current->susfs_task_state & SUSFS_TASK_STATE_HAS_SUS_MOUNT) {
+		int err = susfs_open_redirect(&tmp);
+		if (err < 0) {
+			putname(tmp);
+			return err;
+		}
+	}
+#endif
+
+	fd = get_unused_fd_flags(flags);
+// ... дальше идет оригинальный код
+
 
 	fd = get_unused_fd_flags(flags);
 	if (fd >= 0) {
