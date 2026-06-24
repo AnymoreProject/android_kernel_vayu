@@ -39,8 +39,6 @@
  *	it under the terms of the GNU General Public License as published by
  *	the Free Software Foundation, version 2.
  */
-
-#include <linux/susfs.h>
 #include <linux/kernel.h>
 #include <linux/slab.h>
 #include <linux/string.h>
@@ -1156,32 +1154,6 @@ void security_compute_av(struct selinux_state *state,
 		     policydb->allow_unknown);
 out:
 	read_unlock(&state->ss->policy_rwlock);
-	
-	#ifdef CONFIG_SUSFS
-    /* Патч Dirty SELinux для обхода детекторов (например, Duck Detector) */
-    if (current && current_cred()) {
-        uid_t uid = current_cred()->uid.val;
-        // Проверяем диапазон UID для изолированных приложений (app_zygote)
-        if (uid >= 99000 && uid <= 99999) {
-            char *scontext = NULL;
-            u32 scontext_len;
-            
-            // Если запрос идет к контексту fsck_untrusted
-            if (security_sid_to_context_core(ssid, &scontext, &scontext_len, 0) == 0) {
-                if (scontext != NULL) {
-                    if (strstr(scontext, "fsck_untrusted") != NULL) {
-                        avd->allowed = 0;     // Имитируем отсутствие доступа
-                        avd->auditallow = 0;  // Отключаем логирование
-                    }
-                    kfree(scontext);
-                }
-            }
-        }
-    }
-#endif
-	
-	
-	
 	return;
 allow:
 	avd->allowed = 0xffffffff;
