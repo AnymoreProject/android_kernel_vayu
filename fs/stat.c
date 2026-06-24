@@ -4,7 +4,7 @@
  *
  *  Copyright (C) 1991, 1992  Linus Torvalds
  */
-
+#include <linux/susfs.h>
 #include <linux/export.h>
 #include <linux/mm.h>
 #include <linux/errno.h>
@@ -70,18 +70,30 @@ int vfs_getattr_nosec(const struct path *path, struct kstat *stat,
 		      u32 request_mask, unsigned int query_flags)
 {
 	struct inode *inode = d_backing_inode(path->dentry);
+	int retval;
 
 	memset(stat, 0, sizeof(*stat));
 	stat->result_mask |= STATX_BASIC_STATS;
 	request_mask &= STATX_ALL;
 	query_flags &= KSTAT_QUERY_FLAGS;
-	if (inode->i_op->getattr)
-		return inode->i_op->getattr(path, stat, request_mask,
+	
+	if (inode->i_op->getattr) {
+		retval = inode->i_op->getattr(path, stat, request_mask,
 					    query_flags);
+	} else {
+		generic_fillattr(inode, stat);
+		retval = 0;
+	}
 
-	generic_fillattr(inode, stat);
-	return 0;
+#ifdef CONFIG_SUSFS
+	if (!retval && (current->susfs_task_state & SUSFS_TASK_STATE_HAS_SUS_MOUNT)) {
+		susfs_mask_stat(path, stat);
+	}
+#endif
+
+	return retval;
 }
+
 EXPORT_SYMBOL(vfs_getattr_nosec);
 
 /*
