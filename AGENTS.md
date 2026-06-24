@@ -33,19 +33,28 @@ GNU `aarch64-linux-gnu-*` binaries do not need to exist; the prefix only selects
 The successful artifact is `out/arch/arm64/boot/Image` (+ `dtbo.img`, `dtb.img`). `build.sh` wraps the
 above and then copies the image into an AnyKernel3 flashable zip (`/root/AnyKernel3`, not present in CI).
 
-### KernelSU‑Next / SusFS integration
-The committed `vayu_defconfig` sets `CONFIG_KSU=y` / `CONFIG_SUSFS=y`, but those Kconfig symbols and the
-driver/SusFS sources are **not in the tree** — they are fetched at CI time (see `.github/workflows/main2.yml`):
-clone `https://github.com/sidex15/KernelSU-Next` (branch `legacy-susfs-v2`) and copy its `kernel/*` into the
-tree (`obj-y += KernelSU/` in `drivers/Makefile`). Because the Kconfig symbols are absent in the committed
-tree, the `#ifdef CONFIG_SUSFS` blocks compile out by default, but `fs/open.c`, `fs/stat.c`,
-`fs/proc_namespace.c` and `security/selinux/ss/services.c` still `#include <linux/susfs.h>` **unconditionally**,
-so that header must exist for those files to compile.
+### KernelSU‑Next / SuSFS / KPROBES integration (branch `cursor/ksunext-susfs-kprobes-*`)
+This branch ships a real, building integration:
+- **KernelSU‑Next** is a git submodule at `KernelSU-Next/` (`sidex15/KernelSU-Next`, branch
+  `next-susfs_v1.5.5-v1.5.7`), wired via the `drivers/kernelsu` symlink + `obj-$(CONFIG_KSU)` in
+  `drivers/Makefile` and `source "drivers/kernelsu/Kconfig"` in `drivers/Kconfig`.
+  **You must run `git submodule update --init --recursive`** after checkout or the build fails.
+- **SuSFS** = `simonpunk/susfs4ksu` `kernel-4.14` (v1.5.5): the `50_add_susfs_in_kernel-4.14.patch` is
+  already applied to the tree, and `fs/susfs.c` / `include/linux/susfs*.h` are committed.
+- **Hooks**: KSU uses kprobe hooks (`CONFIG_KSU_KPROBES_HOOK=y`, needs `CONFIG_KPROBES=y`). The optional
+  `SUS_SU` runtime toggle needs `CONFIG_KPROBE_EVENTS`/`FTRACE`, which are intentionally left off (perf).
+- `vayu_defconfig` enables `CONFIG_KSU`, `CONFIG_KSU_KPROBES_HOOK` and the full `CONFIG_KSU_SUSFS*` set.
 
-### Known pre-existing source bug (NOT an environment issue)
-`fs/open.c` has a duplicated `long do_sys_open(...)` definition line (the SusFS patch commit introduced it),
-which is a hard syntax error. A clean full build to `Image` is blocked on this committed code bug; the
-cross‑compile environment itself is healthy and compiles the rest of the tree. Do not "fix" it unless asked.
+**Build gotcha (determinism):** KernelSU‑Next's `kernel/Makefile` injects `path_umount`/`can_umount` into
+`fs/namespace.c`+`fs/internal.h` and `get_cred_rcu` into `include/linux/cred.h` via `sed` *during* the build.
+On a fresh tree the object is compiled before the injection → first build fails with
+`undefined symbol: path_umount`. These backports are now **pre-committed** to the source so the Makefile's
+grep-guards skip injection and clean builds succeed first-try. Do not revert them.
+
+### Flashable package
+CI (`.github/workflows/main*.yml`) packs the kernel into an `osm0sis/AnyKernel3` recovery zip
+(`device.name1=vayu`, `device.name2=bhima`, `BLOCK=/dev/block/bootdevice/by-name/boot`), bundling
+`out/arch/arm64/boot/Image`, `dtb.img` (as `dtb`) and `dtbo.img`.
 
 ### No automated tests / lint
 There is no unit‑test suite or repo lint config. Validation == the kernel compiles. CI lives in
