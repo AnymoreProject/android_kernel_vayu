@@ -12,6 +12,7 @@
 #include <linux/security.h>
 #include <linux/fs_struct.h>
 #include <linux/sched/task.h>
+#include <linux/susfs.h>
 
 #include "proc/internal.h" /* only for get_proc_task() in ->open() */
 
@@ -132,6 +133,14 @@ out:
 
 static int show_mountinfo(struct seq_file *m, struct vfsmount *mnt)
 {
+    /* Внедрение хука SusFS для скрытия монтирований от /proc/self/mountinfo */
+#ifdef CONFIG_SUSFS
+    if (current->susfs_task_state & SUSFS_TASK_STATE_HAS_SUS_MOUNT) {
+        if (susfs_is_mount_hidden(real_mount(mnt)))
+            return 0; // Скрываем, возвращая 0 без вывода строки
+    }
+#endif
+
 	struct proc_mounts *p = m->private;
 	struct mount *r = real_mount(mnt);
 	struct super_block *sb = mnt->mnt_sb;
