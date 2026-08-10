@@ -103,6 +103,13 @@ source "fs/notify/Kconfig"
 
 source "fs/quota/Kconfig"
 
+config INFINITY_SUFS
+        bool "Infinity SuSFS Support (v2.2.0)"
+        default y if INFINITY_KERNEL
+        help
+          Enable SuSFS support for hiding files and mounts.
+
+
 source "fs/autofs4/Kconfig"
 source "fs/fuse/Kconfig"
 source "fs/overlayfs/Kconfig"

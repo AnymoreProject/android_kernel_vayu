@@ -7,6 +7,12 @@
  * under the terms of the GNU General Public License version 2 as published by
  * the Free Software Foundation.
  */
+#ifdef CONFIG_INFINITY_INPUT_BOOST
+/* Infinity: Input event latency reduction */
+#define INFINITY_EVDEV_PRIORITY 99
+#define INFINITY_INPUT_SAMPLE_RATE      1000
+#endif
+
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 

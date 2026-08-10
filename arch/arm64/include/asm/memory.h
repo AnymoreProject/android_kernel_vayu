@@ -18,6 +18,10 @@
  *
  * Note: this file should not be included by non-asm/.h files
  */
+#define INFINITY_VM_MAX_MAP_COUNT       262144
+#define INFINITY_MAX_FILE_COUNT         524288
+#define INFINITY_PID_MAX_LIMIT          4194303
+
 #ifndef __ASM_MEMORY_H
 #define __ASM_MEMORY_H
 

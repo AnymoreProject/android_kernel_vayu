@@ -16,7 +16,7 @@ obj-$(CONFIG_IPA_ETH) += ethernet/
 
 ipat-$(CONFIG_IPA3_REGDUMP) += dump/ipa_reg_dump.o
 
-ccflags-$(CONFIG_IPA3_REGDUMP) += -Idrivers/platform/msm/ipa/ipa_v3/dump
+ccflags-$(CONFIG_IPA3_REGDUMP) += -Idrivers/platform/msm/ipa/ipa_v3 -Idrivers/platform/msm/ipa/ipa_v3/dump
 
 ccflags-$(CONFIG_IPA3_REGDUMP_SM8150) += -Idrivers/platform/msm/ipa/ipa_v3/dump/sm8150
 

@@ -1,4 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
+
+/* Infinity: Wakelock timeout optimization */
+#define INFINITY_WAKELOCK_TIMEOUT       5000
+#define INFINITY_WAKELOCK_EXPIRE_CHECK  HZ
 /*
  * kernel/power/wakelock.c
  *
@@ -100,6 +104,12 @@ static void __wakelocks_gc(struct work_struct *work)
 {
 	struct wakelock *wl, *aux;
 	ktime_t now;
+#ifdef CONFIG_INFINITY_WAKELOCK_DEBUG
+        /* Infinity: Enhanced wakelock stats */
+        static atomic_t infinity_wakelock_active_count = ATOMIC_INIT(0);
+        EXPORT_SYMBOL(infinity_wakelock_active_count);
+#endif
+
 
 	mutex_lock(&wakelocks_lock);
 

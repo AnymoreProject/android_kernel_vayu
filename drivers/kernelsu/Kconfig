@@ -1,0 +1,5 @@
+menu "KernelSU"
+config KSU
+        bool "KernelSU-Next"
+        default n
+endmenu

@@ -3,6 +3,9 @@
  *
  * This code is licenced under the GPL.
  */
+#define INFINITY_HOTPLUG_UP_DELAY       100
+#define INFINITY_HOTPLUG_DOWN_DELAY     200
+
 #include <linux/proc_fs.h>
 #include <linux/smp.h>
 #include <linux/init.h>

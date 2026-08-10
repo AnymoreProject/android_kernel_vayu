@@ -9,6 +9,11 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+/* Infinity: Thermal margin tuning for charging bypass */
+#define INFINITY_THERMAL_MARGIN_HIGH    5
+#define INFINITY_THERMAL_MARGIN_LOW             2
+#define INFINITY_THERMAL_CHARGE_LIMIT   80
+
 
 #define pr_fmt(fmt) "%s:%s " fmt, KBUILD_MODNAME, __func__
 

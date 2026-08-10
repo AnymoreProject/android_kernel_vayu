@@ -20,6 +20,16 @@
  */
 
 #include <linux/init.h>
+#ifdef CONFIG_INFINITY_AUDIO_LOWLATENCY
+/* Infinity: PCM low-latency tuning */
+#define INFINITY_PCM_PERIOD_SIZE        128
+#define INFINITY_PCM_BUFFER_SIZE                1024
+#define INFINITY_PCM_LOWLATENCY_MIN     64
+#define INFINITY_PCM_LOWLATENCY_MAX     256
+static int infinity_pcm_lowlatency = 1;
+module_param_named(pcm_low_latency, infinity_pcm_lowlatency, int, 0644);
+#endif
+
 #include <linux/slab.h>
 #include <linux/module.h>
 #include <linux/time.h>

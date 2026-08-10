@@ -1610,8 +1610,8 @@ static void genetlink_exit(void)
 #else /* !CONFIG_NET */
 static inline int genetlink_init(void) { return 0; }
 static inline void genetlink_exit(void) {}
-static inline int thermal_generate_netlink_event(struct thermal_zone_device *tz,
-		enum events event) { return -ENODEV; }
+// &
+// 		enum events event) { return -ENODEV; }
 #endif /* !CONFIG_NET */
 
 static int thermal_pm_notify(struct notifier_block *nb,
