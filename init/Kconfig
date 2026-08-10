@@ -6,6 +6,10 @@ config KERNELVERSION
 	string
 	option env="KERNELVERSION"
 
+menuconfig INFINITY_KERNEL
+        bool "Infinity Kernel Customizations"
+        default y
+
 config DEFCONFIG_LIST
 	string
 	depends on !UML

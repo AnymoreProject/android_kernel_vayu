@@ -1,5 +1,14 @@
 menu "CPU Frequency scaling"
 
+config INFINITY_CPU_GOVERNOR
+        bool "Infinity CPU Governor (Interactive+)"
+        depends on CPU_FREQ
+        default y if INFINITY_KERNEL
+        help
+          Enhanced interactive governor with gaming-optimized frequency
+          scaling for Snapdragon 732G (SM8150-AC).
+
+
 config CPU_FREQ
 	bool "CPU Frequency scaling"
 	select SRCU

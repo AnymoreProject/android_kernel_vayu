@@ -1,5 +1,12 @@
 #
 # IP configuration
+config INFINITY_TCP_BBR
+        bool "Infinity TCP BBRv2 Congestion Control"
+        depends on TCP_CONG_BBR
+        default y if INFINITY_KERNEL
+        help
+          Enable BBRv2 as default congestion control.
+
 #
 config IP_MULTICAST
 	bool "IP: multicasting"

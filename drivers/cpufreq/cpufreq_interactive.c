@@ -15,6 +15,12 @@
  * Author: Mike Chan (mike@android.com)
  */
 
+#define INFINITY_TOUCH_BOOST_FREQ               1843200
+#define INFINITY_TOUCH_BOOST_DURATION   500000
+#define INFINITY_INPUT_BOOST_FREQ               1401600
+#define INFINITY_INPUT_BOOST_DURATION   300000
+#define INFINITY_SCHED_BOOST_STEPS              3
+
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
 #include <linux/cpu.h>

@@ -29,6 +29,10 @@
 #include <linux/syscore_ops.h>
 #include <linux/ftrace.h>
 #include <trace/events/power.h>
+/* Infinity: Suspend wakelock timeout tuning */
+#define INFINITY_SUSPEND_WAKELOCK_TIMEOUT       3000
+#define INFINITY_SUSPEND_MAX_SLEEP_RETRIES      5
+
 #include <linux/compiler.h>
 #include <linux/moduleparam.h>
 #include <linux/wakeup_reason.h>

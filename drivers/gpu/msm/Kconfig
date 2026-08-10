@@ -21,6 +21,14 @@ config QCOM_ADRENO_DEFAULT_GOVERNOR
 	default "simple_ondemand"
 	depends on QCOM_KGSL
 
+config INFINITY_GPU_GAMING
+        bool "Infinity GPU Gaming Mode"
+        depends on QCOM_KGSL
+        default y if INFINITY_KERNEL
+        help
+          GPU frequency boost for gaming workloads.
+
+
 config QCOM_KGSL_IOMMU
 	bool
 	default y if QCOM_KGSL && (MSM_IOMMU || ARM_SMMU)

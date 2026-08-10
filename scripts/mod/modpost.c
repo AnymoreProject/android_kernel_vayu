@@ -808,7 +808,7 @@ static int match(const char *sym, const char * const pat[])
 		if (*p == '*' && *endp == '*') {
 			char *here, *bare = strndup(p + 1, strlen(p) - 2);
 
-			here = strstr(sym, bare);
+			here = (char *)strstr(sym, bare);
 			free(bare);
 			if (here != NULL)
 				return 1;

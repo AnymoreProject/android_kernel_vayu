@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0
 #include <linux/crypto.h>
+/* Infinity: TCP Fast Open queue size tuning */
+#define INFINITY_TFO_QUEUE_SIZE 4096
+#define INFINITY_TFO_BACKLOG_SIZE               1024
+
 #include <linux/err.h>
 #include <linux/init.h>
 #include <linux/kernel.h>

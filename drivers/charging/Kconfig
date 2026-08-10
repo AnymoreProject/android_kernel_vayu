@@ -1,0 +1,6 @@
+config CHARGING_CONTROL
+	bool "Infinity Charging Control"
+	default y
+	help
+	  Enable Infinity Kernel charging control driver for Poco X3 Pro.
+	  Allows controlling charging via sysfs.

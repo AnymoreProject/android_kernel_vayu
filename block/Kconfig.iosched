@@ -100,6 +100,12 @@ config BFQ_GROUP_IOSCHED
        Enable hierarchical scheduling in BFQ, using the blkio
        (cgroups-v1) or io (cgroups-v2) controller.
 
+config INFINITY_FSYNC_SCHEDULER
+        bool "Infinity FSYNC I/O Scheduler Tuning"
+        default y if INFINITY_KERNEL
+        help
+          Optimizes I/O scheduler for FSYNC-heavy gaming workloads.
+
 endmenu
 
 endif

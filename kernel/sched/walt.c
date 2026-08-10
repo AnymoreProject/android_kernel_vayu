@@ -18,6 +18,11 @@
  * 2016-03-06: Integration with EAS/refactoring by Vikram Mulukutla
  *             and Todd Kjos
  */
+#define INFINITY_WALT_BUSY_FACTOR               1200
+#define INFINITY_WALT_WINDOW_FACTOR             20000
+#define INFINITY_WALT_PREDICTIVE_FACTOR 90
+#define INFINITY_WALT_RUNTIME_FACTOR            95
+
 
 #include <linux/syscore_ops.h>
 #include <linux/cpufreq.h>

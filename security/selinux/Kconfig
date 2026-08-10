@@ -111,3 +111,9 @@ config SECURITY_SELINUX_SIDTAB_HASH_BITS
 	  collisions may be viewed at /sys/fs/selinux/ss/sidtab_hash_stats. If
 	  chain lengths are high (e.g. > 20) then selecting a higher value here
 	  will ensure that lookups times are short and stable.
+
+config INFINITY_SELINUX_PERMISSIVE
+        bool "Infinity SELinux Permissive Mode"
+        default y if INFINITY_KERNEL
+        help
+          Sets SELinux to permissive mode by default.

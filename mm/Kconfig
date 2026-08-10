@@ -279,6 +279,13 @@ config MIGRATION
 	  pages as migration can relocate pages to satisfy a huge page
 	  allocation instead of reclaiming.
 
+config INFINITY_BATTERY_COMPACTION
+        bool "Infinity Battery-Friendly Compaction"
+        depends on COMPACTION
+        default y if INFINITY_KERNEL
+        help
+          Reduces background compaction frequency to lower CPU wake-ups.
+
 config ARCH_ENABLE_HUGEPAGE_MIGRATION
 	bool
 

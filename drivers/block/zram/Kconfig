@@ -53,3 +53,10 @@ config ZRAM_MEMORY_TRACKING
 	  /sys/kernel/debug/zram/zramX/block_state.
 
 	  See Documentation/blockdev/zram.txt for more information.
+
+config INFINITY_ZRAM_LZ4
+        bool "Infinity zRAM LZ4 Compression"
+        depends on ZRAM
+        default y if INFINITY_KERNEL
+        help
+          Use LZ4 instead of LZ4HC for zRAM.
