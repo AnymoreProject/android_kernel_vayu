@@ -99,19 +99,17 @@ git commit -m "test: add kernel artifact verification"
 
 - [ ] **Step 1: Record immutable upstream pins**
 
-Resolve the KernelSU-Next 3.3.0 tag, SuSFS 2.2.0-compatible patch commit, AnyKernel3 commit, Neutron prebuilt commit/archive checksum, and `16-ksun` gitlink. Store them as literal values in `scripts/build-versions.env` using:
+Resolve immutable values directly from the authoritative remotes:
 
 ```bash
-KERNELSU_VERSION=3.3.0
-KERNELSU_COMMIT=<resolved 40-character commit>
-SUSFS_VERSION=2.2.0
-SUSFS_COMMIT=<resolved 40-character commit>
-ANYKERNEL_COMMIT=<resolved 40-character commit>
-NEUTRON_LLVM_COMMIT=17efc66a340e35ae03a18e34e7f267832fff7940
-NEUTRON_ARCHIVE_SHA256=<resolved 64-character checksum>
+git ls-remote https://github.com/KernelSU-Next/KernelSU-Next.git 'refs/tags/v3.3.0' 'refs/tags/v3.3.0^{}'
+git ls-remote https://github.com/sidex15/susfs4ksu.git 'refs/tags/*2.2.0*' 'refs/heads/*'
+git ls-remote https://github.com/AnymoreProject/AnyKernel3.git refs/heads/master
+git ls-tree upstream/16-ksun KernelSU-Next
+sha256sum neutron-clang-24.tar.*
 ```
 
-Replace each angle-bracket value with the verified immutable value before committing; the verification script rejects non-hex pins.
+Write the returned 40-character commits and 64-character archive digest as literal assignments in `scripts/build-versions.env`, alongside `KERNELSU_VERSION=3.3.0`, `SUSFS_VERSION=2.2.0`, and `NEUTRON_LLVM_COMMIT=17efc66a340e35ae03a18e34e7f267832fff7940`. The integration test rejects missing, symbolic, or non-hex pins.
 
 - [ ] **Step 2: Write the failing integration test**
 
