@@ -133,9 +133,23 @@ if grep -R -Fq -- "config KSU_SUSFS_SUS_MEMFD" "$KSU_TREE/kernel"; then
   fail "reverted sus_memfd support must stay absent"
 fi
 
-require_sha256 "fs/susfs.c" 952b0501ca42a464cdbec2ce64dffedc2e7c67df6a884a6f022b21a259f1837f
 require_sha256 "include/linux/susfs.h" 05d4ec96ba75d459612d6269614bc7e1948c4e7b1ecd4dfaf47fbd4ec4a3fcfb
 require_sha256 "include/linux/susfs_def.h" 4eef49b81b6d8320194284adf02987b7e89df81495f7cdf9de9b29072dd9d87a
+
+require_contains "include/linux/fsnotify_backend.h" \
+  "int (*handle_event)(struct fsnotify_group *group,"
+require_contains "include/linux/fsnotify_backend.h" \
+  "extern int fsnotify_add_mark(struct fsnotify_mark *mark, struct inode *inode,"
+require_contains "fs/susfs.c" \
+  "static int susfs_handle_sdcard_event(struct fsnotify_group *group,"
+require_contains "fs/susfs.c" \
+  ".handle_event = susfs_handle_sdcard_event,"
+require_contains "fs/susfs.c" \
+  "fsnotify_add_mark(m, inode, NULL, 0)"
+if grep -Fq -- ".handle_inode_event" "$ROOT_DIR/fs/susfs.c" ||
+   grep -Fq -- "fsnotify_add_inode_mark" "$ROOT_DIR/fs/susfs.c"; then
+  fail "fs/susfs.c still uses the post-4.14 fsnotify inode API"
+fi
 
 require_line "arch/arm64/configs/vayu_defconfig" "CONFIG_KPROBES=y"
 require_line "arch/arm64/configs/vayu_defconfig" "CONFIG_KSU=y"
