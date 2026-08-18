@@ -135,7 +135,9 @@ fi
 
 require_sha256 "fs/susfs.c" 3d3462246f981b411c93ed4144f3575c046ef55ae1d1b81db5c1bcb6b5591082
 require_sha256 "include/linux/susfs.h" 05d4ec96ba75d459612d6269614bc7e1948c4e7b1ecd4dfaf47fbd4ec4a3fcfb
-require_sha256 "include/linux/susfs_def.h" 4eef49b81b6d8320194284adf02987b7e89df81495f7cdf9de9b29072dd9d87a
+require_contains "include/linux/susfs_def.h" "current_uid() >= 10000);"
+require_contains "patches/KernelSU-Next/0001-susfs-2.2.0.patch" \
+  "typedef asmlinkage long (*syscall_fn_t)(const struct pt_regs *regs);"
 
 require_contains "include/linux/fsnotify_backend.h" \
   "int (*handle_event)(struct fsnotify_group *group,"
