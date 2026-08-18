@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PATCH_FILE="$ROOT_DIR/patches/KernelSU-Next/0001-susfs-2.2.0.patch"
+COMPAT_PATCH_FILE="$ROOT_DIR/patches/KernelSU-Next/0002-linux-4.14-file-wrapper.patch"
 KSU_DIR="$ROOT_DIR/KernelSU-Next"
 
 # shellcheck disable=SC1091
@@ -26,6 +27,14 @@ else
   git -C "$KSU_DIR" apply "$PATCH_FILE"
   printf 'Applied SuSFS %s integration to KernelSU-Next %s\n' \
     "$SUSFS_VERSION" "$KERNELSU_NEXT_VERSION"
+fi
+
+if git -C "$KSU_DIR" apply --reverse --check "$COMPAT_PATCH_FILE" >/dev/null 2>&1; then
+  printf 'KernelSU-Next Linux 4.14 file wrapper patch is already applied\n'
+else
+  git -C "$KSU_DIR" apply --check "$COMPAT_PATCH_FILE"
+  git -C "$KSU_DIR" apply "$COMPAT_PATCH_FILE"
+  printf 'Applied KernelSU-Next Linux 4.14 file wrapper compatibility\n'
 fi
 
 expected_uid_api_uses=24
