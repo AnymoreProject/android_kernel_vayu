@@ -31,6 +31,12 @@ cp "$root_dir/scripts/build-versions.env" "$repo_dir/scripts/build-versions.env"
 cp "$root_dir/scripts/prepare-ksu-susfs.sh" "$repo_dir/scripts/prepare-ksu-susfs.sh"
 cp "$root_dir/scripts/package-anykernel.sh" "$repo_dir/scripts/package-anykernel.sh"
 
+grep -Fq 'find "$OUT_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +' "$repo_dir/build.sh" ||
+  fail 'build must clean bind-mounted OUT_DIR contents without removing the mount point'
+if grep -Fq 'rm -rf "$OUT_DIR"' "$repo_dir/build.sh"; then
+  fail 'build must not remove the bind-mounted OUT_DIR itself'
+fi
+
 cat > "$bin_dir/make" <<'MAKE'
 #!/usr/bin/env bash
 set -Eeuo pipefail
