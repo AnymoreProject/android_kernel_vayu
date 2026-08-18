@@ -16,7 +16,7 @@ clang_dir="$tmp_dir/clang"
 anykernel_dir="$tmp_dir/AnyKernel3"
 out_dir="$tmp_dir/out"
 artifacts_dir="$tmp_dir/artifacts"
-mkdir -p "$repo_dir/scripts" "$bin_dir" "$clang_dir/bin" "$anykernel_dir/.git"
+mkdir -p "$repo_dir/scripts" "$repo_dir/KernelSU-Next" "$bin_dir" "$clang_dir/bin" "$anykernel_dir/.git"
 
 cp "$root_dir/build.sh" "$repo_dir/build.sh"
 cp "$root_dir/scripts/build-versions.env" "$repo_dir/scripts/build-versions.env"
