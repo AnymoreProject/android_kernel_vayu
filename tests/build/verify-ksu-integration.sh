@@ -206,6 +206,7 @@ require_contains "scripts/prepare-ksu-susfs.sh" "expected_uid_api_uses=24"
 require_contains "scripts/prepare-ksu-susfs.sh" "s/current_uid()\\.val/current_uid()/g"
 require_contains "scripts/prepare-ksu-susfs.sh" "s|<linux/pgtable.h>|<asm/pgtable.h>|"
 require_contains "scripts/prepare-ksu-susfs.sh" "s/__flush_icache_range/flush_icache_range/"
+require_contains "scripts/prepare-ksu-susfs.sh" "0002-linux-4.14-file-wrapper.patch"
 bash -n "$ROOT_DIR/scripts/prepare-ksu-susfs.sh"
 
 compile_mode="${VERIFY_KERNEL_COMPILE:-auto}"
