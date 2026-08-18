@@ -28,7 +28,7 @@ else
     "$SUSFS_VERSION" "$KERNELSU_NEXT_VERSION"
 fi
 
-expected_uid_api_uses=25
+expected_uid_api_uses=24
 uid_api_uses="$({ grep -RhoF 'current_uid().val' "$KSU_DIR/kernel" || true; } | wc -l | tr -d ' ')"
 if [[ "$uid_api_uses" != 0 && "$uid_api_uses" != "$expected_uid_api_uses" ]]; then
   printf 'Unexpected KernelSU current_uid().val use count: %s\n' "$uid_api_uses" >&2
