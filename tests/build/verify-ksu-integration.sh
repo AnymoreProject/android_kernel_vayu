@@ -92,6 +92,9 @@ require_equals NEUTRON_ARCHIVE_SHA256 aa1567215d2be42d0d054ae72627e6d18ef6ac8020
 [[ "${SUSFS_VERSION:-}" == "v2.2.0" ]] || fail "SuSFS version must be v2.2.0"
 
 require_file "patches/KernelSU-Next/0001-susfs-2.2.0.patch"
+require_file "patches/KernelSU-Next/0002-linux-4.14-file-wrapper.patch"
+require_contains "patches/KernelSU-Next/0002-linux-4.14-file-wrapper.patch" \
+  "LINUX_VERSION_CODE >= KERNEL_VERSION(5, 0, 0)"
 TEMP_DIR="$(mktemp -d)"
 KSU_TREE="$TEMP_DIR/KernelSU-Next"
 mkdir -p "$KSU_TREE"
