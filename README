@@ -14,5 +14,11 @@ several of them using the Restructured Text markup notation.
 See Documentation/00-INDEX for a list of what is contained in each file.
 
 Please read the Documentation/process/changes.rst file, as it contains the
-requirements for building and running the kernel, and information about
-the problems which may result by upgrading your kernel.
+requirements for building and running the kernel, and information about the
+problems which may result by upgrading the kernel.
+
+Docker build
+============
+
+See `DOCKER.md <DOCKER.md>`_ for the reproducible local Docker build and
+GitHub Actions artifact instructions.

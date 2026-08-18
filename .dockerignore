@@ -1,0 +1,9 @@
+.git
+.gitmodules
+out
+artifacts
+work
+*.zip
+*.tar
+*.tar.zst
+*.img

@@ -1,0 +1,118 @@
+name: Docker Kernel Build
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [16]
+  push:
+    branches:
+      - 16
+      - codex/docker-ksun-build
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docker-kernel-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      EXPECTED_LLVM_COMMIT: 17efc66a340e35ae03a18e34e7f267832fff7940
+      EXPECTED_KERNEL_RELEASE: 4.14.357+17-perf
+
+    steps:
+      - name: Check out kernel and submodules
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          submodules: recursive
+          fetch-depth: 0
+
+      - name: Prepare writable build directories
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out artifacts
+          {
+            echo "HOST_UID=$(id -u)"
+            echo "HOST_GID=$(id -g)"
+          } >> "$GITHUB_ENV"
+
+      - name: Check runner disk space
+        shell: bash
+        run: |
+          set -euo pipefail
+          df -h .
+          available_kb="$(df -Pk . | awk 'NR == 2 { print $4 }')"
+          required_kb=$((30 * 1024 * 1024))
+          if (( available_kb < required_kb )); then
+            printf 'At least 30 GiB free space is required; only %s KiB is available.\n' "$available_kb" >&2
+            exit 1
+          fi
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - name: Restore ccache archive
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: .ci-cache/ccache.tar.zst
+          key: ccache-vayu-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('Dockerfile', 'scripts/build-versions.env') }}
+          restore-keys: |
+            ccache-vayu-${{ runner.os }}-${{ github.ref_name }}-
+            ccache-vayu-${{ runner.os }}-
+
+      - name: Build pinned builder image with BuildKit cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker buildx bake -f docker-compose.yml \
+            --set kernel-builder.cache-from=type=gha \
+            --set kernel-builder.cache-to=type=gha,mode=max \
+            --load kernel-builder
+
+      - name: Import ccache
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .ci-cache
+          if [[ -s .ci-cache/ccache.tar.zst ]]; then
+            docker compose run --rm \
+              -v "${PWD}/.ci-cache:/ci-cache:ro" \
+              kernel-builder bash -c 'zstd -dc /ci-cache/ccache.tar.zst | tar -xf - -C /ccache'
+          fi
+
+      - name: Build kernel in the canonical container
+        shell: bash
+        run: docker compose run --rm kernel-builder ./build.sh
+
+      - name: Verify build artifacts
+        shell: bash
+        run: ./scripts/verify-build.sh artifacts
+
+      - name: Export ccache
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p .ci-cache
+          docker compose run --rm \
+            -v "${PWD}/.ci-cache:/ci-cache" \
+            kernel-builder bash -c 'tar -cf - -C /ccache . | zstd -T0 -10 -o /ci-cache/ccache.tar.zst'
+
+      - name: Upload kernel package and raw images
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: anymore-vayu-kernel
+          path: |
+            artifacts/*.zip
+            artifacts/Image
+            artifacts/dtb.img
+            artifacts/dtbo.img
+            artifacts/kernel.config
+            artifacts/build-info.txt
+          if-no-files-found: error
+          retention-days: 14
