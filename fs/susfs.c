@@ -1288,7 +1288,6 @@ struct watch_dir {
 	u32 mask;
 	struct path kpath;
 	struct inode *inode;
-	struct fsnotify_mark *mark;
 };
 
 static struct fsnotify_group *g;
@@ -1296,8 +1295,7 @@ static struct fsnotify_group *g;
 static struct watch_dir g_watch = { .path = "/data/media/0", // we choose the underlying f2fs /data/media/0 instead of the FUSE /sdcard
 									.mask = (FS_EVENT_ON_CHILD | FS_ISDIR | FS_OPEN_PERM) };
 
-static int add_mark_on_inode(struct inode *inode, u32 mask,
-								struct fsnotify_mark **out);
+static int add_mark_on_inode(struct inode *inode, u32 mask);
 
 static unsigned long sdcard_cleanup_scheduled;
 static struct delayed_work sdcard_cleanup_dwork;
@@ -1341,7 +1339,7 @@ static int watch_one_dir(struct watch_dir *wd)
 	}
 	ihold(wd->inode);
 
-	ret = add_mark_on_inode(wd->inode, wd->mask, &wd->mark);
+	ret = add_mark_on_inode(wd->inode, wd->mask);
 	if (ret) {
 		SUSFS_LOGE("add mark failed for %s (%d)\n", wd->path, ret);
 		iput(wd->inode);
@@ -1359,12 +1357,15 @@ static int watch_one_dir(struct watch_dir *wd)
  * synchronize_srcu on the same SRCU struct, causing a permanent deadlock).
  * Cleanup is deferred to a delayed_work that runs outside the SRCU context.
  */
-static int susfs_handle_sdcard_inode_event(struct fsnotify_mark *mark, u32 mask,
-											struct inode *inode, struct inode *dir,
-											const struct qstr *file_name, u32 cookie)
+static int susfs_handle_sdcard_event(struct fsnotify_group *group,
+									 struct inode *inode,
+									 struct fsnotify_mark *inode_mark,
+									 struct fsnotify_mark *vfsmount_mark,
+									 u32 mask, const void *data, int data_type,
+									 const unsigned char *file_name, u32 cookie,
+									 struct fsnotify_iter_info *iter_info)
 {
-	if (!file_name || file_name->len != 7 ||
-	    memcmp(file_name->name, "Android", 7))
+	if (!file_name || strcmp((const char *)file_name, "Android"))
 		return 0;
 
 	if (test_and_set_bit(0, &sdcard_cleanup_scheduled))
@@ -1376,14 +1377,20 @@ static int susfs_handle_sdcard_inode_event(struct fsnotify_mark *mark, u32 mask,
 	return 0;
 }
 
+static void susfs_free_sdcard_mark(struct fsnotify_mark *mark)
+{
+	kfree(mark);
+}
+
 static const struct fsnotify_ops fsnotify_ops = {
-	.handle_inode_event = susfs_handle_sdcard_inode_event,
+	.handle_event = susfs_handle_sdcard_event,
+	.free_mark = susfs_free_sdcard_mark,
 };
 
-static int add_mark_on_inode(struct inode *inode, u32 mask,
-								struct fsnotify_mark **out)
+static int add_mark_on_inode(struct inode *inode, u32 mask)
 {
 	struct fsnotify_mark *m;
+	int ret;
 
 	m = kzalloc(sizeof(*m), GFP_KERNEL);
 	if (!m)
@@ -1392,11 +1399,12 @@ static int add_mark_on_inode(struct inode *inode, u32 mask,
 	fsnotify_init_mark(m, g);
 	m->mask = mask;
 
-	if (fsnotify_add_inode_mark(m, inode, 0)) {
+	ret = fsnotify_add_mark(m, inode, NULL, 0);
+	if (ret) {
 		fsnotify_put_mark(m);
-		return -EINVAL;
+		return ret;
 	}
-	*out = m;
+	fsnotify_put_mark(m);
 	return 0;
 }
 
@@ -1468,4 +1476,3 @@ void susfs_init(void) {\
 
 /* No module exit is needed becuase it should never be a loadable kernel module */
 //void __init susfs_exit(void)
-
