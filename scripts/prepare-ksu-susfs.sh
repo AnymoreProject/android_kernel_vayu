@@ -21,9 +21,29 @@ actual_commit="$(git -C "$KSU_DIR" rev-parse HEAD)"
 
 if git -C "$KSU_DIR" apply --reverse --check "$PATCH_FILE" >/dev/null 2>&1; then
   printf 'KernelSU-Next SuSFS patch is already applied\n'
-  exit 0
+else
+  git -C "$KSU_DIR" apply --check "$PATCH_FILE"
+  git -C "$KSU_DIR" apply "$PATCH_FILE"
+  printf 'Applied SuSFS %s integration to KernelSU-Next %s\n' \
+    "$SUSFS_VERSION" "$KERNELSU_NEXT_VERSION"
 fi
 
-git -C "$KSU_DIR" apply --check "$PATCH_FILE"
-git -C "$KSU_DIR" apply "$PATCH_FILE"
-printf 'Applied SuSFS %s integration to KernelSU-Next %s\n'   "$SUSFS_VERSION" "$KERNELSU_NEXT_VERSION"
+expected_uid_api_uses=25
+uid_api_uses="$(grep -RhoF 'current_uid().val' "$KSU_DIR/kernel" | wc -l | tr -d ' ')"
+if [[ "$uid_api_uses" != 0 && "$uid_api_uses" != "$expected_uid_api_uses" ]]; then
+  printf 'Unexpected KernelSU current_uid().val use count: %s\n' "$uid_api_uses" >&2
+  exit 1
+fi
+if [[ "$uid_api_uses" == "$expected_uid_api_uses" ]]; then
+  grep -RlF 'current_uid().val' "$KSU_DIR/kernel" |
+    xargs sed -i 's/current_uid()\.val/current_uid()/g'
+fi
+
+sucompat_file="$KSU_DIR/kernel/feature/sucompat.c"
+if grep -Fq '#include <linux/pgtable.h>' "$sucompat_file"; then
+  sed -i 's|<linux/pgtable.h>|<asm/pgtable.h>|' "$sucompat_file"
+fi
+grep -Fq '#include <asm/pgtable.h>' "$sucompat_file" || {
+  printf 'KernelSU sucompat pgtable compatibility include is missing\n' >&2
+  exit 1
+}
