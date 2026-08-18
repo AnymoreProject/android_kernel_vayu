@@ -88,7 +88,8 @@ require_file "include/linux/susfs.h"
 require_file "include/linux/susfs_def.h"
 require_contains "include/linux/susfs.h" '#define SUSFS_VERSION "v2.2.0"'
 require_line "fs/Makefile" 'obj-$(CONFIG_KSU_SUSFS) += susfs.o'
-require_contains "kernel/sys.c" "ksu_handle_sys_reboot"
+require_contains "kernel/sys.c" "ksu_handle_setresuid"
+require_contains "kernel/reboot.c" "ksu_handle_sys_reboot"
 require_contains "security/selinux/avc.c" "susfs_is_avc_log_spoofing_enabled"
 require_file "patches/KernelSU-Next/0001-susfs-2.2.0.patch"
 require_file "scripts/prepare-ksu-susfs.sh"
