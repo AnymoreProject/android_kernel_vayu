@@ -95,6 +95,9 @@ require_file "patches/KernelSU-Next/0001-susfs-2.2.0.patch"
 require_file "patches/KernelSU-Next/0002-linux-4.14-file-wrapper.patch"
 require_file "patches/KernelSU-Next/0003-linux-4.14-seccomp-cache.patch"
 require_file "patches/KernelSU-Next/0004-linux-4.14-mount-api.patch"
+require_file "patches/KernelSU-Next/0005-linux-4.14-fsnotify.patch"
+require_contains "patches/KernelSU-Next/0005-linux-4.14-fsnotify.patch" \
+  ".handle_event = ksu_handle_event"
 require_contains "patches/KernelSU-Next/0004-linux-4.14-mount-api.patch" \
   "-#include <uapi/linux/mount.h>"
 require_contains "patches/KernelSU-Next/0003-linux-4.14-seccomp-cache.patch" \
