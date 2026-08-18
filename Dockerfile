@@ -12,7 +12,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     PATH=/opt/neutron-clang/bin:${PATH}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      bash bc bison build-essential ca-certificates ccache cpio curl file flex gawk \
+      bash bc bison build-essential ca-certificates ccache cpio curl device-tree-compiler file flex gawk \
       gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi git libelf-dev libncurses-dev \
       libssl-dev lz4 make perl python3 rsync unzip xz-utils zip zstd \
     && rm -rf /var/lib/apt/lists/*
