@@ -41,7 +41,7 @@ require_literal Dockerfile 'NEUTRON_ARCHIVE_URL'
 require_literal Dockerfile 'NEUTRON_CATALOGUE_MANIFEST_URL'
 require_literal Dockerfile 'NEUTRON_ARCHIVE_SHA256'
 require_literal Dockerfile 'sha256sum -c'
-if grep -Fq '\\\\n' Dockerfile; then
+if grep -Fq '\\n' Dockerfile; then
   fail 'Dockerfile printf formats must use shell newline escapes, not literal backslashes'
 fi
 require_literal Dockerfile 'clang --version'
