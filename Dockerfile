@@ -7,7 +7,8 @@ ARG BUILDER_GID=1000
 ENV DEBIAN_FRONTEND=noninteractive \
     CLANG_DIR=/opt/neutron-clang \
     CCACHE_DIR=/ccache \
-    HOME=/home/builder
+    HOME=/home/builder \
+    PATH=/opt/neutron-clang/bin:${PATH}
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       bash bc bison build-essential ca-certificates ccache cpio curl file flex gawk \
