@@ -75,6 +75,17 @@ if [[ "$uid_api_uses" == "$expected_uid_api_uses" ]]; then
     xargs sed -i 's/current_uid()\.val/__kuid_val(current_uid())/g'
 fi
 
+expected_twa_resume_uses=2
+twa_resume_uses="$({ grep -RhoF 'TWA_RESUME' "$KSU_DIR/kernel" || true; } | wc -l | tr -d ' ')"
+if [[ "$twa_resume_uses" != 0 && "$twa_resume_uses" != "$expected_twa_resume_uses" ]]; then
+  printf 'Unexpected KernelSU TWA_RESUME use count: %s\n' "$twa_resume_uses" >&2
+  exit 1
+fi
+if [[ "$twa_resume_uses" == "$expected_twa_resume_uses" ]]; then
+  grep -RlF 'TWA_RESUME' "$KSU_DIR/kernel" |
+    xargs sed -i 's/TWA_RESUME/true/g'
+fi
+
 sucompat_file="$KSU_DIR/kernel/feature/sucompat.c"
 if grep -Fq '#include <linux/pgtable.h>' "$sucompat_file"; then
   sed -i 's|<linux/pgtable.h>|<asm/pgtable.h>|' "$sucompat_file"
