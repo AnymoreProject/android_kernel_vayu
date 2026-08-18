@@ -97,8 +97,15 @@ require_file "patches/KernelSU-Next/0003-linux-4.14-seccomp-cache.patch"
 require_file "patches/KernelSU-Next/0004-linux-4.14-mount-api.patch"
 require_file "patches/KernelSU-Next/0005-linux-4.14-fsnotify.patch"
 require_file "patches/KernelSU-Next/0006-linux-4.14-seccomp-state.patch"
+require_file "patches/KernelSU-Next/0007-linux-4.14-selinux-policy.patch"
 require_contains "patches/KernelSU-Next/0006-linux-4.14-seccomp-state.patch" \
   "atomic_set(&current->seccomp.filter_count, 0);"
+require_contains "patches/KernelSU-Next/0007-linux-4.14-selinux-policy.patch" \
+  "selinux_state.ss->policy_rwlock"
+require_contains "patches/KernelSU-Next/0007-linux-4.14-selinux-policy.patch" \
+  "KSU_SELINUX_POLICY_OBJECT"
+require_contains "patches/KernelSU-Next/0007-linux-4.14-selinux-policy.patch" \
+  "Linux 4.14 mutates the policydb in place"
 require_contains "patches/KernelSU-Next/0005-linux-4.14-fsnotify.patch" \
   ".handle_event = ksu_handle_event"
 require_contains "patches/KernelSU-Next/0004-linux-4.14-mount-api.patch" \
@@ -225,6 +232,7 @@ require_contains "scripts/prepare-ksu-susfs.sh" "0003-linux-4.14-seccomp-cache.p
 require_contains "scripts/prepare-ksu-susfs.sh" "0004-linux-4.14-mount-api.patch"
 require_contains "scripts/prepare-ksu-susfs.sh" "0005-linux-4.14-fsnotify.patch"
 require_contains "scripts/prepare-ksu-susfs.sh" "0006-linux-4.14-seccomp-state.patch"
+require_contains "scripts/prepare-ksu-susfs.sh" "0007-linux-4.14-selinux-policy.patch"
 bash -n "$ROOT_DIR/scripts/prepare-ksu-susfs.sh"
 
 compile_mode="${VERIFY_KERNEL_COMPILE:-auto}"
