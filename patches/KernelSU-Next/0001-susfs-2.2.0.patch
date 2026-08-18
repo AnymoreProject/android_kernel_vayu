@@ -315,3 +315,16 @@ index fbedd11..7ebcfc2 100644
  
  void ksu_supercalls_init(void);
  void ksu_supercalls_exit(void);
+diff --git a/kernel/hook/syscall_hook.h b/kernel/hook/syscall_hook.h
+index 4c426f1..5e13c9a 100644
+--- a/kernel/hook/syscall_hook.h
++++ b/kernel/hook/syscall_hook.h
+@@ -4,6 +4,8 @@
+ 
+ #if defined(__x86_64__)
+ typedef sys_call_ptr_t syscall_fn_t;
++#elif defined(__aarch64__)
++typedef asmlinkage long (*syscall_fn_t)(const struct pt_regs *regs);
+ #endif
+ 
+ extern syscall_fn_t *ksu_syscall_table;
