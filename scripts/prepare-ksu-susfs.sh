@@ -36,7 +36,7 @@ if [[ "$uid_api_uses" != 0 && "$uid_api_uses" != "$expected_uid_api_uses" ]]; th
 fi
 if [[ "$uid_api_uses" == "$expected_uid_api_uses" ]]; then
   grep -RlF 'current_uid().val' "$KSU_DIR/kernel" |
-    xargs sed -i 's/current_uid()\.val/current_uid()/g'
+    xargs sed -i 's/current_uid()\.val/__kuid_val(current_uid())/g'
 fi
 
 sucompat_file="$KSU_DIR/kernel/feature/sucompat.c"
