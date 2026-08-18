@@ -1,0 +1,21 @@
+services:
+  kernel-builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        BUILDER_UID: "${HOST_UID:-1000}"
+        BUILDER_GID: "${HOST_GID:-1000}"
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    environment:
+      HOME: /home/builder
+      CCACHE_DIR: /ccache
+    volumes:
+      - .:/workspace
+      - ./out:/workspace/out
+      - ./artifacts:/workspace/artifacts
+      - ccache:/ccache
+    command: ["./build.sh"]
+
+volumes:
+  ccache:
