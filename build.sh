@@ -45,8 +45,8 @@ lld_identity="$(ld.lld --version)"
 git -C "$ROOT_DIR" submodule update --init --depth 1 KernelSU-Next
 bash "$ROOT_DIR/scripts/prepare-ksu-susfs.sh"
 
-rm -rf "$OUT_DIR"
 mkdir -p "$OUT_DIR" "$ARTIFACTS_DIR"
+find "$OUT_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
 
 make -C "$ROOT_DIR" -j"$JOBS" O="$OUT_DIR" ARCH=arm64 vayu_defconfig
 [[ -s "$OUT_DIR/.config" ]] || die "vayu_defconfig did not create .config"
