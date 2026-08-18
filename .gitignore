@@ -133,3 +133,7 @@ Android.bp
 #
 # Ignore out dir
 out
+
+/out/
+/artifacts/
+/.ccache/
