@@ -55,13 +55,11 @@ MAKE
 
 cat > "$clang_dir/bin/clang" <<'CLANG'
 #!/usr/bin/env bash
-printf 'Neutron clang version %s\n' "${FAKE_CLANG_VERSION:-24.0.0git}"
-printf '17efc66a340e35ae03a18e34e7f267832fff7940\n'
+printf 'Neutron clang version %s (https://github.com/llvm/llvm-project.git 17efc66a340e35ae03a18e34e7f267832fff7940)\n' "${FAKE_CLANG_VERSION:-24.0.0git}"
 CLANG
 cat > "$clang_dir/bin/ld.lld" <<'LLD'
 #!/usr/bin/env bash
-printf 'Neutron LLD version %s\n' "${FAKE_LLD_VERSION:-24.0.0git}"
-printf '17efc66a340e35ae03a18e34e7f267832fff7940\n'
+printf 'Neutron LLD %s (https://github.com/llvm/llvm-project.git 17efc66a340e35ae03a18e34e7f267832fff7940) (compatible with GNU linkers)\n' "${FAKE_LLD_VERSION:-24.0.0}"
 LLD
 cat > "$bin_dir/git" <<'GIT'
 #!/usr/bin/env bash
@@ -120,9 +118,9 @@ for artifact in Image dtb.img dtbo.img kernel.config build-info.txt; do
 done
 grep -Fqx 'Linux version 4.14.357+17-perf' "$artifacts_dir/build-info.txt" ||
   fail 'missing kernel release metadata'
-grep -Fqx 'Neutron clang version 24.0.0git' "$artifacts_dir/build-info.txt" ||
+grep -Fqx 'Neutron clang version 24.0.0git (https://github.com/llvm/llvm-project.git 17efc66a340e35ae03a18e34e7f267832fff7940)' "$artifacts_dir/build-info.txt" ||
   fail 'actual verified clang output was not recorded'
-grep -Fqx 'Neutron LLD version 24.0.0git' "$artifacts_dir/build-info.txt" ||
+grep -Fqx 'Neutron LLD 24.0.0 (https://github.com/llvm/llvm-project.git 17efc66a340e35ae03a18e34e7f267832fff7940) (compatible with GNU linkers)' "$artifacts_dir/build-info.txt" ||
   fail 'actual verified lld output was not recorded'
 grep -Fqx 'KBUILD_BUILD_USER=contract-user' "$artifacts_dir/build-info.txt" ||
   fail 'missing build user metadata'
@@ -137,7 +135,7 @@ if unzip -Z1 "$expected_zip" | grep -Eq '(^|/)\.git(/|$)|old\.zip'; then
 fi
 
 expect_rejected 'a wrong clang identity' run_build FAKE_CLANG_VERSION=23.0.0git
-expect_rejected 'a wrong lld identity' run_build FAKE_LLD_VERSION=23.0.0git
+expect_rejected 'a wrong lld identity' run_build FAKE_LLD_VERSION=23.0.0
 for output in Image dtb.img dtbo.img; do
   expect_rejected "a missing $output" run_build "FAKE_MISSING_OUTPUT=$output"
 done
