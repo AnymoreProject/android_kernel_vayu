@@ -6,6 +6,7 @@ ARG BUILDER_UID=1000
 ARG BUILDER_GID=1000
 ENV DEBIAN_FRONTEND=noninteractive \
     CLANG_DIR=/opt/neutron-clang \
+    ANYKERNEL_DIR=/opt/AnyKernel3 \
     CCACHE_DIR=/ccache \
     HOME=/home/builder \
     PATH=/opt/neutron-clang/bin:${PATH}
@@ -19,25 +20,36 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY scripts/build-versions.env /tmp/build-versions.env
 RUN set -eux; \
     . /tmp/build-versions.env; \
-    curl --fail --location --retry 3 \
-      "https://github.com/Neutron-Toolchains/clang-build-catalogue/releases/download/30072026/neutron-clang-30072026.tar.zst" \
-      --output /tmp/neutron-clang.tar.zst; \
-    printf '%s  %s\n' "$NEUTRON_ARCHIVE_SHA256" /tmp/neutron-clang.tar.zst | sha256sum -c -; \
+    case "$NEUTRON_ARCHIVE_URL" in \
+      "https://github.com/Neutron-Toolchains/clang-build-catalogue/releases/download/$NEUTRON_CATALOGUE_RELEASE/neutron-clang-$NEUTRON_CATALOGUE_RELEASE.tar.zst") ;; \
+      *) printf 'unexpected Neutron archive URL: %s\\n' "$NEUTRON_ARCHIVE_URL" >&2; exit 1 ;; \
+    esac; \
+    curl --fail --location --retry 3 "$NEUTRON_CATALOGUE_MANIFEST_URL" --output /tmp/neutron-manifest; \
+    grep -Fqx -- "$NEUTRON_ARCHIVE_SHA256" /tmp/neutron-manifest; \
+    curl --fail --location --retry 3 "$NEUTRON_ARCHIVE_URL" --output /tmp/neutron-clang.tar.zst; \
+    printf '%s  %s\\n' "$NEUTRON_ARCHIVE_SHA256" /tmp/neutron-clang.tar.zst | sha256sum -c -; \
     mkdir -p "$CLANG_DIR"; \
     tar --use-compress-program=unzstd --extract --file /tmp/neutron-clang.tar.zst \
       --strip-components=1 --directory "$CLANG_DIR"; \
-    rm /tmp/neutron-clang.tar.zst /tmp/build-versions.env; \
+    rm /tmp/neutron-clang.tar.zst /tmp/neutron-manifest; \
     clang --version; \
     "$CLANG_DIR/bin/clang" --version | grep -F 'Neutron clang version 24.0.0git'; \
     "$CLANG_DIR/bin/clang" --version | grep -F "$NEUTRON_LLVM_COMMIT"; \
     ld.lld --version; \
     "$CLANG_DIR/bin/ld.lld" --version | grep -F 'Neutron LLD version 24.0.0git'; \
-    "$CLANG_DIR/bin/ld.lld" --version | grep -F "$NEUTRON_LLVM_COMMIT"
+    "$CLANG_DIR/bin/ld.lld" --version | grep -F "$NEUTRON_LLVM_COMMIT"; \
+    git init "$ANYKERNEL_DIR"; \
+    git -C "$ANYKERNEL_DIR" remote add origin https://github.com/AnymoreProject/AnyKernel3.git; \
+    git -C "$ANYKERNEL_DIR" fetch --depth 1 origin "$ANYKERNEL3_COMMIT"; \
+    git -C "$ANYKERNEL_DIR" checkout --detach "$ANYKERNEL3_COMMIT"; \
+    git -C "$ANYKERNEL_DIR" reset --hard "$ANYKERNEL3_COMMIT"; \
+    git -C "$ANYKERNEL_DIR" clean -ffdqx; \
+    rm /tmp/build-versions.env
 
 RUN groupadd --gid "$BUILDER_GID" builder \
     && useradd --uid "$BUILDER_UID" --gid "$BUILDER_GID" --create-home --shell /bin/bash builder \
     && mkdir -p /workspace "$CCACHE_DIR" \
-    && chown -R builder:builder /workspace "$CCACHE_DIR"
+    && chown -R builder:builder /workspace "$CCACHE_DIR" "$ANYKERNEL_DIR"
 
 WORKDIR /workspace
 USER builder
