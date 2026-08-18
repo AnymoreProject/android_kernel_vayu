@@ -328,3 +328,15 @@ index 4c426f1..5e13c9a 100644
  #endif
  
  extern syscall_fn_t *ksu_syscall_table;
+diff --git a/kernel/feature/sulog.h b/kernel/feature/sulog.h
+index f69494d..23de92a 100644
+--- a/kernel/feature/sulog.h
++++ b/kernel/feature/sulog.h
+@@ -1,6 +1,7 @@
+ #ifndef __KSU_H_SULOG
+ #define __KSU_H_SULOG
+ 
++#include <linux/init.h>
+ #include <linux/types.h>
+ 
+ bool ksu_sulog_is_enabled(void);
