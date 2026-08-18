@@ -145,6 +145,8 @@ require_contains "fs/susfs.c" \
 require_contains "fs/susfs.c" \
   ".handle_event = susfs_handle_sdcard_event,"
 require_contains "fs/susfs.c" \
+  ".free_mark = susfs_free_sdcard_mark,"
+require_contains "fs/susfs.c" \
   "fsnotify_add_mark(m, inode, NULL, 0)"
 if grep -Fq -- ".handle_inode_event" "$ROOT_DIR/fs/susfs.c" ||
    grep -Fq -- "fsnotify_add_inode_mark" "$ROOT_DIR/fs/susfs.c"; then
