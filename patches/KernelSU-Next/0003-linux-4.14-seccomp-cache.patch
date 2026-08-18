@@ -1,0 +1,37 @@
+diff --git a/kernel/infra/seccomp_cache.c b/kernel/infra/seccomp_cache.c
+index 6511066..8dbc714 100644
+--- a/kernel/infra/seccomp_cache.c
++++ b/kernel/infra/seccomp_cache.c
+@@ -8,6 +8,24 @@
+ #include "klog.h" // IWYU pragma: keep
+ #include "infra/seccomp_cache.h"
+ 
++#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 0, 0)
++/*
++ * Linux 4.14 has no seccomp action cache to mutate. Keep the original BPF
++ * filter evaluation intact (fail closed) instead of guessing its private
++ * struct seccomp_filter layout.
++ */
++void ksu_seccomp_clear_cache(struct seccomp_filter *filter, int nr)
++{
++    (void)filter;
++    (void)nr;
++}
++
++void ksu_seccomp_allow_cache(struct seccomp_filter *filter, int nr)
++{
++    (void)filter;
++    (void)nr;
++}
++#else
+ struct action_cache {
+ 	DECLARE_BITMAP(allow_native, SECCOMP_ARCH_NATIVE_NR);
+ #ifdef SECCOMP_ARCH_COMPAT
+@@ -62,4 +80,5 @@ void ksu_seccomp_allow_cache(struct seccomp_filter *filter, int nr)
+         set_bit(nr, filter->cache.allow_compat);
+     }
+ #endif
+-}
+\ No newline at end of file
++}
++#endif
