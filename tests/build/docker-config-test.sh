@@ -25,7 +25,7 @@ require_file docker-compose.yml
 require_file scripts/docker-build.sh
 require_file scripts/build-versions.env
 
-require_match Dockerfile '^FROM [^[:space:]]*ubuntu@sha256:[a-f0-9]{64}($|[[:space:]])'
+require_match Dockerfile '^FROM [^[:space:]]*ubuntu(:[^@[:space:]]+)?@sha256:[a-f0-9]{64}($|[[:space:]])'
 require_match Dockerfile 'apt-get install -y --no-install-recommends'
 require_match Dockerfile 'NEUTRON_ARCHIVE_SHA256'
 require_match Dockerfile 'sha256sum -c'
