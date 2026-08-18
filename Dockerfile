@@ -22,12 +22,12 @@ RUN set -eux; \
     . /tmp/build-versions.env; \
     case "$NEUTRON_ARCHIVE_URL" in \
       "https://github.com/Neutron-Toolchains/clang-build-catalogue/releases/download/$NEUTRON_CATALOGUE_RELEASE/neutron-clang-$NEUTRON_CATALOGUE_RELEASE.tar.zst") ;; \
-      *) printf 'unexpected Neutron archive URL: %s\\n' "$NEUTRON_ARCHIVE_URL" >&2; exit 1 ;; \
+      *) printf 'unexpected Neutron archive URL: %s\n' "$NEUTRON_ARCHIVE_URL" >&2; exit 1 ;; \
     esac; \
     curl --fail --location --retry 3 "$NEUTRON_CATALOGUE_MANIFEST_URL" --output /tmp/neutron-manifest; \
     grep -Fqx -- "$NEUTRON_ARCHIVE_SHA256" /tmp/neutron-manifest; \
     curl --fail --location --retry 3 "$NEUTRON_ARCHIVE_URL" --output /tmp/neutron-clang.tar.zst; \
-    printf '%s  %s\\n' "$NEUTRON_ARCHIVE_SHA256" /tmp/neutron-clang.tar.zst | sha256sum -c -; \
+    printf '%s  %s\n' "$NEUTRON_ARCHIVE_SHA256" /tmp/neutron-clang.tar.zst | sha256sum -c -; \
     mkdir -p "$CLANG_DIR"; \
     tar --use-compress-program=unzstd --extract --file /tmp/neutron-clang.tar.zst \
       --strip-components=1 --directory "$CLANG_DIR"; \
