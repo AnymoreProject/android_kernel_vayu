@@ -94,7 +94,6 @@ kernel_sha="$(git -C "$ROOT_DIR" rev-parse HEAD)"
   printf 'Neutron archive sha256 %s\n' "$NEUTRON_ARCHIVE_SHA256"
   printf 'KBUILD_BUILD_USER=%s\n' "$KBUILD_BUILD_USER"
   printf 'KBUILD_BUILD_HOST=%s\n' "$KBUILD_BUILD_HOST"
-  printf '%s\n' "$compiler_identity"
 } > "$ARTIFACTS_DIR/build-info.txt"
 
 OUT_DIR="$OUT_DIR" ANYKERNEL_DIR="$ANYKERNEL_DIR" ARTIFACTS_DIR="$ARTIFACTS_DIR" \
