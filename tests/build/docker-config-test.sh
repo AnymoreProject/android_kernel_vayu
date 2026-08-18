@@ -46,6 +46,7 @@ if grep -Fq '\\n' Dockerfile; then
 fi
 require_literal Dockerfile 'clang --version'
 require_literal Dockerfile 'ld.lld --version'
+require_literal Dockerfile "grep -F 'Neutron LLD 24.0.0 ('"
 require_literal Dockerfile '24.0.0git'
 require_literal Dockerfile 'NEUTRON_LLVM_COMMIT'
 require_match Dockerfile '^USER [^[:space:]]+'
