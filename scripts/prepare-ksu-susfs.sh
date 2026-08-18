@@ -7,6 +7,7 @@ COMPAT_PATCH_FILE="$ROOT_DIR/patches/KernelSU-Next/0002-linux-4.14-file-wrapper.
 SECCOMP_PATCH_FILE="$ROOT_DIR/patches/KernelSU-Next/0003-linux-4.14-seccomp-cache.patch"
 MOUNT_PATCH_FILE="$ROOT_DIR/patches/KernelSU-Next/0004-linux-4.14-mount-api.patch"
 FSNOTIFY_PATCH_FILE="$ROOT_DIR/patches/KernelSU-Next/0005-linux-4.14-fsnotify.patch"
+SECCOMP_STATE_PATCH_FILE="$ROOT_DIR/patches/KernelSU-Next/0006-linux-4.14-seccomp-state.patch"
 KSU_DIR="$ROOT_DIR/KernelSU-Next"
 
 # shellcheck disable=SC1091
@@ -62,6 +63,14 @@ else
   git -C "$KSU_DIR" apply --check "$FSNOTIFY_PATCH_FILE"
   git -C "$KSU_DIR" apply "$FSNOTIFY_PATCH_FILE"
   printf 'Applied KernelSU-Next Linux 4.14 fsnotify compatibility\n'
+fi
+
+if git -C "$KSU_DIR" apply --reverse --check "$SECCOMP_STATE_PATCH_FILE" >/dev/null 2>&1; then
+  printf 'KernelSU-Next Linux 4.14 seccomp state patch is already applied\n'
+else
+  git -C "$KSU_DIR" apply --check "$SECCOMP_STATE_PATCH_FILE"
+  git -C "$KSU_DIR" apply "$SECCOMP_STATE_PATCH_FILE"
+  printf 'Applied KernelSU-Next Linux 4.14 seccomp state compatibility\n'
 fi
 
 expected_uid_api_uses=24
