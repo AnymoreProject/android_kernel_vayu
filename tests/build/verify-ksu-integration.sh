@@ -152,6 +152,13 @@ require_contains "fs/susfs.c" \
   "ret = add_mark_on_inode(wd->inode, wd->mask);"
 require_contains "fs/susfs.c" \
   "fsnotify_add_mark(m, inode, NULL, 0)"
+fsnotify_signature="$(
+  sed -n '/^static int susfs_handle_sdcard_event(/,/^{/p' "$ROOT_DIR/fs/susfs.c" |
+    tr '\n\t' '  ' | tr -s ' '
+)"
+expected_fsnotify_signature='static int susfs_handle_sdcard_event(struct fsnotify_group *group, struct inode *inode, struct fsnotify_mark *inode_mark, struct fsnotify_mark *vfsmount_mark, u32 mask, const void *data, int data_type, const unsigned char *file_name, u32 cookie, struct fsnotify_iter_info *iter_info) { '
+[[ "$fsnotify_signature" == "$expected_fsnotify_signature" ]] ||
+  fail "fs/susfs.c sdcard callback does not match Linux 4.14 fsnotify_ops.handle_event"
 if grep -Fq -- ".handle_inode_event" "$ROOT_DIR/fs/susfs.c" ||
    grep -Fq -- "fsnotify_add_inode_mark" "$ROOT_DIR/fs/susfs.c"; then
   fail "fs/susfs.c still uses the post-4.14 fsnotify inode API"
