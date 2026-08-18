@@ -51,6 +51,37 @@ require_match scripts/docker-build.sh 'mkdir -p .*out .*artifacts'
 require_match scripts/docker-build.sh 'docker compose build kernel-builder'
 require_match scripts/docker-build.sh 'docker compose run --rm kernel-builder ./build\.sh'
 
+# The image must provision the exact AnyKernel3 tree required by packaging.
+require_match Dockerfile 'ANYKERNEL_DIR=/opt/AnyKernel3'
+require_match Dockerfile 'https://github\.com/AnymoreProject/AnyKernel3\.git'
+require_match Dockerfile 'ANYKERNEL3_COMMIT'
+require_match Dockerfile 'git -C "\$ANYKERNEL_DIR" reset --hard "\$ANYKERNEL3_COMMIT"'
+require_match Dockerfile 'git -C "\$ANYKERNEL_DIR" clean -ffdqx'
+require_match Dockerfile 'chown -R builder:builder "\$ANYKERNEL_DIR"'
+
+# The release asset locator and catalogue manifest must be immutable env pins.
+require_match scripts/build-versions.env '^NEUTRON_CATALOGUE_RELEASE=30072026 '^FROM [^@[:space:]]+(:latest|:[^@[:space:]]+)?[[:space:]]*$' Dockerfile; then
+  fail 'Dockerfile contains a floating image tag'
+fi
+
+printf 'PASS: Docker build configuration contract\n'
+
+require_match scripts/build-versions.env '^NEUTRON_ARCHIVE_URL=https://github\.com/Neutron-Toolchains/clang-build-catalogue/releases/download/\$\{NEUTRON_CATALOGUE_RELEASE\}/neutron-clang-\$\{NEUTRON_CATALOGUE_RELEASE\}\.tar\.zst '^FROM [^@[:space:]]+(:latest|:[^@[:space:]]+)?[[:space:]]*$' Dockerfile; then
+  fail 'Dockerfile contains a floating image tag'
+fi
+
+printf 'PASS: Docker build configuration contract\n'
+
+require_match scripts/build-versions.env '^NEUTRON_CATALOGUE_MANIFEST_URL=https://raw\.githubusercontent\.com/Neutron-Toolchains/clang-build-catalogue/\$\{NEUTRON_CATALOGUE_COMMIT\}/\$\{NEUTRON_CATALOGUE_MANIFEST\} '^FROM [^@[:space:]]+(:latest|:[^@[:space:]]+)?[[:space:]]*$' Dockerfile; then
+  fail 'Dockerfile contains a floating image tag'
+fi
+
+printf 'PASS: Docker build configuration contract\n'
+
+require_match Dockerfile 'NEUTRON_ARCHIVE_URL'
+require_match Dockerfile 'NEUTRON_CATALOGUE_MANIFEST_URL'
+require_match Dockerfile 'NEUTRON_CATALOGUE_RELEASE'
+
 if grep -Eq '^FROM [^@[:space:]]+(:latest|:[^@[:space:]]+)?[[:space:]]*$' Dockerfile; then
   fail 'Dockerfile contains a floating image tag'
 fi
