@@ -1,7 +1,9 @@
 #ifndef KSU_SUSFS_DEF_H
 #define KSU_SUSFS_DEF_H
+
 #include <linux/bits.h>
 #include <linux/string.h>
+
 /********/
 /* ENUM */
 /********/
@@ -30,16 +32,20 @@
 #define CMD_SUSFS_SUS_SU 0x60000 /* deprecated */
 #define CMD_SUSFS_ENABLE_AVC_LOG_SPOOFING 0x60010
 #define CMD_SUSFS_ADD_SUS_MAP 0x60020
+
 #define SUSFS_MAX_LEN_PATHNAME 256 // 256 should address many paths already unless you are doing some strange experimental stuff, then set your own desired length
 #define SUSFS_FAKE_CMDLINE_OR_BOOTCONFIG_SIZE 8192 // 8192 is enough I guess
 #define SUSFS_ENABLED_FEATURES_SIZE 8192 // 8192 is enough I guess
 #define SUSFS_MAX_VERSION_BUFSIZE 16
 #define SUSFS_MAX_VARIANT_BUFSIZE 16
+
 #define TRY_UMOUNT_DEFAULT 0 /* used by susfs_try_umount() */
 #define TRY_UMOUNT_DETACH 1 /* used by susfs_try_umount() */
+
 #define VFSMOUNT_MNT_FLAGS_KSU_UNSHARED_MNT 0x80000000 /* used for mounts that are unshared by ksu process */
 #define DEFAULT_KSU_MNT_ID 2000000000 /* used for mounts created or single cloned by ksu process */
 #define DEFAULT_KSU_MNT_GROUP_ID 200000 /* used by mount->mnt_group_id */
+
 #ifndef FUSE_SUPER_MAGIC
 #define FUSE_SUPER_MAGIC 0x65735546
 #endif
@@ -51,15 +57,18 @@
  */
  // thread_info->flags is unsigned long :D
 #define TIF_PROC_UMOUNTED 33
+
 #define AS_FLAGS_SUS_PATH 33
 #define AS_FLAGS_SUS_MOUNT 34
 #define AS_FLAGS_SUS_KSTAT 35
 #define AS_FLAGS_OPEN_REDIRECT 36
 #define AS_FLAGS_SUS_MAP 39
+
 #define ND_STATE_LOOKUP_LAST 32
 #define ND_STATE_OPEN_LAST 64
 #define ND_FLAGS_LOOKUP_LAST		0x2000000
- #define MAGIC_MOUNT_WORKDIR "/debug_ramdisk/workdir"
+ 
+#define MAGIC_MOUNT_WORKDIR "/debug_ramdisk/workdir"
 
 static inline bool susfs_starts_with(const char *str, const char *prefix) {
     while (*prefix) {

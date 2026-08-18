@@ -67,7 +67,8 @@ struct st_susfs_hide_sus_mnts_for_non_su_procs {
 #define KSTAT_SPOOF_ATIME_TV_SEC (1 << 4)
 #define KSTAT_SPOOF_ATIME_TV_NSEC (1 << 5)
 #define KSTAT_SPOOF_MTIME_TV_SEC (1 << 6)
-#define KSTAT_SPOOF_MTIME_TV_NSEC (1 << 7)#define KSTAT_SPOOF_CTIME_TV_SEC (1 < 8)
+#define KSTAT_SPOOF_MTIME_TV_NSEC (1 << 7)
+#define KSTAT_SPOOF_CTIME_TV_SEC (1 < 8)
 #define KSTAT_SPOOF_CTIME_TV_NSEC (1 << 9)
 #define KSTAT_SPOOF_BLOCKS (1 << 10)
 #define KSTAT_SPOOF_BLKSIZE (1 << 11)
@@ -136,7 +137,8 @@ struct st_susfs_open_redirect {
 };
 
 struct st_susfs_open_redirect_hlist {
-	unsigned long                           target_ino;	unsigned long                           target_dev;
+	unsigned long                           target_ino;
+	unsigned long                           target_dev;
 	unsigned long                           redirected_ino;
 	unsigned long                           redirected_dev;
 	int                                     spoofed_mnt_id;
@@ -205,7 +207,8 @@ void susfs_set_uname(void __user **user_info);
 void susfs_spoof_uname(struct new_utsname* tmp);
 #endif
 
-/* enable_log */#ifdef CONFIG_KSU_SUSFS_ENABLE_LOG
+/* enable_log */
+#ifdef CONFIG_KSU_SUSFS_ENABLE_LOG
 void susfs_enable_log(void __user **user_info);
 #endif
 

@@ -23,9 +23,11 @@
 #include <linux/susfs.h>
 #include "fuse/fuse_i.h"
 #include "mount.h"
+
 extern bool susfs_is_current_ksu_domain(void);
 extern void setup_selinux(const char *domain, struct cred *cred);
 extern struct cred *ksu_cred;
+
 #ifdef CONFIG_KSU_SUSFS_ENABLE_LOG
 DEFINE_STATIC_KEY_TRUE(susfs_is_log_enabled);
 #define SUSFS_LOGI(fmt, ...) if (static_branch_likely(&susfs_is_log_enabled)) pr_info("susfs:[%u][%d][%s] " fmt, current_uid().val, current->pid, __func__, ##__VA_ARGS__)
@@ -34,32 +36,39 @@ DEFINE_STATIC_KEY_TRUE(susfs_is_log_enabled);
 #define SUSFS_LOGI(fmt, ...) 
 #define SUSFS_LOGE(fmt, ...) 
 #endif
+
 /* sus_path */
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 DEFINE_STATIC_SRCU(susfs_srcu_sus_path_loop);
 static DEFINE_MUTEX(susfs_mutex_lock_sus_path);
 static LIST_HEAD(LH_SUS_PATH_LOOP);
 const struct qstr susfs_fake_qstr_name = QSTR_INIT("..5.u.S", 7); // used to re-test the dcache lookup, make sure you don't have file named like this!!
+
 void susfs_add_sus_path(void __user **user_info) {
 	struct st_susfs_sus_path info = {0};
 	struct path path;
 	struct inode *inode = NULL;
 	struct fuse_inode *fi = NULL;
+
 	if (copy_from_user(&info, (struct st_susfs_sus_path __user*)*user_info, sizeof(info))) {
 		info.err = -EFAULT;
 		goto out_copy_to_user;
 	}
+
 	info.err = kern_path(info.target_pathname, LOOKUP_FOLLOW, &path);
 	if (info.err) {
 		SUSFS_LOGE("failed opening file '%s'\n", info.target_pathname);
 		goto out_copy_to_user;
 	}
+
 	inode = d_backing_inode(path.dentry);
 	if (!inode || !inode->i_mapping) {
 		SUSFS_LOGE("inode || inode->i_mapping is NULL\n");
 		info.err = -ENOENT;
 		goto out_path_put_path;
-	}	if (inode->i_sb->s_magic == FUSE_SUPER_MAGIC) {
+	}
+
+	if (inode->i_sb->s_magic == FUSE_SUPER_MAGIC) {
 		fi = get_fuse_inode(inode);
 		if (!fi || !fi->inode.i_mapping) {
 			SUSFS_LOGE("fi || fi->inode.i_mapping is NULL\n");
@@ -129,6 +138,7 @@ static void susfs_run_sus_path_loop(void) {
 	struct fuse_inode *fi = NULL;
 	const struct cred *saved = override_creds(ksu_cred);
 	int srcu_idx = srcu_read_lock(&susfs_srcu_sus_path_loop);
+
 	list_for_each_entry_rcu(cursor, &LH_SUS_PATH_LOOP, list) {
 		if (!kern_path(cursor->target_pathname, 0, &path))
 		{
@@ -197,7 +207,8 @@ bool susfs_is_inode_sus_path(struct inode *inode)
 #else
 		if (unlikely(test_bit(AS_FLAGS_SUS_PATH, &fi->inode.i_mapping->flags) &&
 			is_i_uid_not_allowed(fi->inode.i_uid.val)))
-#endif		{
+#endif
+		{
 			SUSFS_LOGI("hiding path with ino '%lu'\n", inode->i_ino);
 			return true;
 		}
@@ -266,6 +277,7 @@ static int susfs_mark_inode_sus_kstat(char *target_pathname, struct st_susfs_sus
 		SUSFS_LOGE("failed opening file '%s'\n", target_pathname);
 		return err;
 	}
+
 	inode = d_backing_inode(path.dentry);
 	if (!inode || !inode->i_mapping) {
 		SUSFS_LOGE("inode || inode->i_mapping is NULL\n");
@@ -335,7 +347,8 @@ void susfs_add_sus_kstat(void __user **user_info) {
 	memcpy(&new_entry->info, &info, sizeof(info));
 
 	// statically or not, check for duplicated entry, and remove it first if so
-	mutex_lock(&susfs_mutex_lock_sus_kstat);	hash_for_each_possible_safe(SUS_KSTAT_HLIST, tmp_entry, tmp_hlist_node, node, info.target_ino) {
+	mutex_lock(&susfs_mutex_lock_sus_kstat);
+	hash_for_each_possible_safe(SUS_KSTAT_HLIST, tmp_entry, tmp_hlist_node, node, info.target_ino) {
 		if (!strcmp(tmp_entry->info.target_pathname, info.target_pathname)) {
 			info.err = susfs_mark_inode_sus_kstat(new_entry->info.target_pathname, new_entry);
 			if (info.err) {
@@ -404,7 +417,8 @@ void susfs_add_sus_kstat(void __user **user_info) {
 	info.err = 0;
 out_copy_to_user:
 	if (copy_to_user(&((struct st_susfs_sus_kstat __user*)*user_info)->err, &info.err, sizeof(info.err))) {
-		info.err = -EFAULT;	}
+		info.err = -EFAULT;
+	}
 	if (!info.is_statically) {
 		SUSFS_LOGI("CMD_SUSFS_ADD_SUS_KSTAT -> ret: %d\n", info.err);
 	} else {
@@ -473,6 +487,7 @@ void susfs_sus_kstat_spoof_generic_fillattr(struct inode *inode, struct kstat *s
 	unsigned long target_ino = 0;
 	dev_t target_dev = 0;
 	bool is_fuse = false;
+
 	if (inode->i_sb->s_magic == FUSE_SUPER_MAGIC) {
 		fi = get_fuse_inode(inode);
 		if (!fi || !fi->inode.i_mapping) {
@@ -542,7 +557,8 @@ out_spoof_kstat:
 void susfs_sus_kstat_spoof_show_map_vma(struct inode *inode, dev_t *out_dev, unsigned long *out_ino) {
 	struct st_susfs_sus_kstat_hlist *entry = NULL;
 	struct fuse_inode *fi = NULL;
-	unsigned long target_ino = 0;	dev_t target_dev = 0;
+	unsigned long target_ino = 0;
+	dev_t target_dev = 0;
 	bool is_fuse = false;
 
 	if (inode->i_sb->s_magic == FUSE_SUPER_MAGIC) {
@@ -611,7 +627,8 @@ void susfs_set_uname(void __user **user_info) {
 	write_seqlock(&susfs_uname_seqlock);
 	if (!strcmp(info.release, "default")) {
 		strscpy(my_uname.release, utsname()->release, __NEW_UTS_LEN);
-	} else {		strncpy(my_uname.release, info.release, __NEW_UTS_LEN);
+	} else {
+		strncpy(my_uname.release, info.release, __NEW_UTS_LEN);
 	}
 	if (!strcmp(info.version, "default")) {
 		strscpy(my_uname.version, utsname()->version, __NEW_UTS_LEN);
@@ -681,6 +698,7 @@ static DEFINE_SEQLOCK(susfs_fake_cmdline_or_bootconfig_seqlock);
 void susfs_set_cmdline_or_bootconfig(void __user **user_info) {
 	struct st_susfs_spoof_cmdline_or_bootconfig *info = (struct st_susfs_spoof_cmdline_or_bootconfig *)kzalloc(sizeof(struct st_susfs_spoof_cmdline_or_bootconfig), GFP_KERNEL);
 	int err = 0;
+
 	if (!info) {
 		err = -ENOMEM;
 		if (copy_to_user(&((struct st_susfs_spoof_cmdline_or_bootconfig __user*)*user_info)->err, &err, sizeof(err)))
@@ -749,7 +767,8 @@ DEFINE_STATIC_SRCU(susfs_srcu_open_redirect);
 void susfs_add_open_redirect(void __user **user_info) {
 	struct st_susfs_open_redirect info = {0};
 	struct st_susfs_open_redirect_hlist *new_entry_target, *new_entry_redirected, *tmp_entry_target, *tmp_entry_redirected;
-	struct hlist_node *tmp_hlist_node;	struct path target_path, redirected_path;
+	struct hlist_node *tmp_hlist_node;
+	struct path target_path, redirected_path;
 	struct inode *target_inode, *redirected_inode;
 	bool is_first_dup_found = false;
 	bool is_second_dup_found = false;
@@ -818,7 +837,8 @@ void susfs_add_open_redirect(void __user **user_info) {
 	}
 
 	new_entry_target->target_ino = target_inode->i_ino;
-	new_entry_target->target_dev = target_inode->i_sb->s_dev;	new_entry_target->redirected_ino = redirected_inode->i_ino;
+	new_entry_target->target_dev = target_inode->i_sb->s_dev;
+	new_entry_target->redirected_ino = redirected_inode->i_ino;
 	new_entry_target->redirected_dev = redirected_inode->i_sb->s_dev;
 	new_entry_target->info.uid_scheme = info.uid_scheme;
 	new_entry_target->reversed_lookup_only = false;
@@ -887,7 +907,8 @@ void susfs_add_open_redirect(void __user **user_info) {
 			new_entry_redirected->info.target_pathname, new_entry_redirected->info.redirected_pathname, new_entry_redirected->target_ino, new_entry_redirected->redirected_ino, new_entry_redirected->target_dev, new_entry_redirected->redirected_dev, new_entry_redirected->info.uid_scheme, new_entry_redirected->reversed_lookup_only, new_entry_redirected->spoofed_mnt_id);
 	hash_add_rcu(OPEN_REDIRECT_HLIST, &new_entry_target->node, new_entry_target->target_ino);
 	hash_add_rcu(OPEN_REDIRECT_HLIST, &new_entry_redirected->node, new_entry_redirected->target_ino);
-	// we need to mark both target and redirected path inode just for spoofing readlink as well	set_bit(AS_FLAGS_OPEN_REDIRECT, &redirected_inode->i_mapping->flags);
+	// we need to mark both target and redirected path inode just for spoofing readlink as well
+	set_bit(AS_FLAGS_OPEN_REDIRECT, &redirected_inode->i_mapping->flags);
 	set_bit(AS_FLAGS_OPEN_REDIRECT, &target_inode->i_mapping->flags);
 	mutex_unlock(&susfs_mutex_lock_open_redirect);
 	info.err = 0;
@@ -956,7 +977,8 @@ int susfs_open_redirect_spoof_vfs_readlink(struct inode *inode, char __user *buf
 		if (entry->reversed_lookup_only &&
 			entry->target_dev == inode->i_sb->s_dev)
 		{
-			SUSFS_LOGI("spoof path '%s' to '%s'\n",					entry->info.target_pathname, entry->info.redirected_pathname);
+			SUSFS_LOGI("spoof path '%s' to '%s'\n",
+					entry->info.target_pathname, entry->info.redirected_pathname);
 			if (strlen(entry->info.redirected_pathname) >= buflen) {
 				SUSFS_LOGE("buflen not big enough\n");
 				srcu_read_unlock(&susfs_srcu_open_redirect, srcu_idx);
@@ -1025,7 +1047,8 @@ int susfs_open_redirect_spoof_seq_show(struct inode *inode, int *out_mnt_id, uns
 	hash_for_each_possible_rcu(OPEN_REDIRECT_HLIST, entry, node, inode->i_ino) {
 		if (entry->reversed_lookup_only &&
 			entry->target_dev == inode->i_sb->s_dev)
-		{			*out_mnt_id = entry->spoofed_mnt_id;
+		{
+			*out_mnt_id = entry->spoofed_mnt_id;
 			*out_ino = entry->redirected_ino;
 			srcu_read_unlock(&susfs_srcu_open_redirect, srcu_idx);
 			return 0;
@@ -1094,7 +1117,8 @@ void susfs_add_sus_map(void __user **user_info) {
 	}
 	set_bit(AS_FLAGS_SUS_MAP, &inode->i_mapping->flags);
 	SUSFS_LOGI("pathname: '%s', is flagged as AS_FLAGS_SUS_MAP\n", info.target_pathname);
-	info.err = 0;out_path_put_path:
+	info.err = 0;
+out_path_put_path:
 	path_put(&path);
 out_copy_to_user:
 	if (copy_to_user(&((struct st_susfs_sus_map __user*)*user_info)->err, &info.err, sizeof(info.err))) {
@@ -1163,7 +1187,8 @@ void susfs_get_enabled_features(void __user **user_info) {
 
 #ifdef CONFIG_KSU_SUSFS_SUS_PATH
 	info->err = copy_config_to_buf("CONFIG_KSU_SUSFS_SUS_PATH\n", buf_ptr, &copied_size, SUSFS_ENABLED_FEATURES_SIZE);
-	if (info->err) goto out_copy_to_user;	buf_ptr = info->enabled_features + copied_size;
+	if (info->err) goto out_copy_to_user;
+	buf_ptr = info->enabled_features + copied_size;
 #endif
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
 	info->err = copy_config_to_buf("CONFIG_KSU_SUSFS_SUS_MOUNT\n", buf_ptr, &copied_size, SUSFS_ENABLED_FEATURES_SIZE);
@@ -1232,7 +1257,8 @@ out_copy_to_user:
 	if (copy_to_user((struct st_susfs_variant __user*)*user_info, &info, sizeof(info))) {
 		info.err = -EFAULT;
 	}
-	SUSFS_LOGI("CMD_SUSFS_SHOW_VARIANT -> ret: %d\n", info.err);}
+	SUSFS_LOGI("CMD_SUSFS_SHOW_VARIANT -> ret: %d\n", info.err);
+}
 
 /* show version */
 void susfs_show_version(void __user **user_info) {
@@ -1301,7 +1327,8 @@ static void susfs_sdcard_cleanup_fn(struct work_struct *work)
 }
 
 static int watch_one_dir(struct watch_dir *wd)
-{	int ret = kern_path(wd->path, LOOKUP_FOLLOW, &wd->kpath);
+{
+	int ret = kern_path(wd->path, LOOKUP_FOLLOW, &wd->kpath);
 	if (ret) {
 		SUSFS_LOGI("path not ready: %s (%d)\n", wd->path, ret);
 		return ret;
@@ -1370,7 +1397,8 @@ static int add_mark_on_inode(struct inode *inode, u32 mask,
 		return -EINVAL;
 	}
 	*out = m;
-	return 0;}
+	return 0;
+}
 
 static int susfs_sdcard_monitor_fn(void *data)
 {
@@ -1440,3 +1468,4 @@ void susfs_init(void) {\
 
 /* No module exit is needed becuase it should never be a loadable kernel module */
 //void __init susfs_exit(void)
+
