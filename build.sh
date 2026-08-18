@@ -29,16 +29,16 @@ require_neutron_tool() {
   local identity
   command -v "$tool" >/dev/null 2>&1 || die "required tool is not available: $tool"
   identity="$("$tool" --version 2>&1)" || die "cannot query $tool identity"
-  grep -Fqx -- "$expected_identity" <<<"$identity" ||
+  grep -Fq -- "$expected_identity" <<<"$identity" ||
     die "$tool does not report expected identity: $expected_identity"
-  grep -Fqx -- "$NEUTRON_LLVM_COMMIT" <<<"$identity" ||
+  grep -Fq -- "$NEUTRON_LLVM_COMMIT" <<<"$identity" ||
     die "$tool does not identify pinned Neutron LLVM $NEUTRON_LLVM_COMMIT"
 }
 
 [[ -x "$CLANG_DIR/bin/clang" ]] || die "clang is missing from CLANG_DIR: $CLANG_DIR"
 [[ -x "$CLANG_DIR/bin/ld.lld" ]] || die "ld.lld is missing from CLANG_DIR: $CLANG_DIR"
 require_neutron_tool clang 'Neutron clang version 24.0.0git'
-require_neutron_tool ld.lld 'Neutron LLD version 24.0.0git'
+require_neutron_tool ld.lld 'Neutron LLD 24.0.0 ('
 clang_identity="$(clang --version)"
 lld_identity="$(ld.lld --version)"
 
