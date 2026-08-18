@@ -116,6 +116,19 @@ git -C "$KSU_TREE" apply --reverse --check "$PATCH_FILE" ||
   fail "SuSFS patch was not applied cleanly"
 grep -Fq "config KSU_SUSFS" "$KSU_TREE/kernel/Kconfig" ||
   fail "patched KernelSU Kconfig is missing KSU_SUSFS"
+for hook in \
+  "susfs_init();" \
+  "bool susfs_is_current_ksu_domain(void)" \
+  "susfs_start_sdcard_monitor_fn();" \
+  "case CMD_SUSFS_SET_UNAME:" \
+  "case CMD_SUSFS_ENABLE_LOG:" \
+  "case CMD_SUSFS_ENABLE_AVC_LOG_SPOOFING:" \
+  "case CMD_SUSFS_SHOW_ENABLED_FEATURES:" \
+  "case CMD_SUSFS_SHOW_VARIANT:" \
+  "case CMD_SUSFS_SHOW_VERSION:"; do
+  grep -R -Fq -- "$hook" "$KSU_TREE/kernel" ||
+    fail "patched KernelSU is missing required enabled hook: $hook"
+done
 if grep -R -Fq -- "config KSU_SUSFS_SUS_MEMFD" "$KSU_TREE/kernel"; then
   fail "reverted sus_memfd support must stay absent"
 fi
