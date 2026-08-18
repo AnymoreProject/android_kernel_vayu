@@ -36,7 +36,7 @@ RUN set -eux; \
     "$CLANG_DIR/bin/clang" --version | grep -F 'Neutron clang version 24.0.0git'; \
     "$CLANG_DIR/bin/clang" --version | grep -F "$NEUTRON_LLVM_COMMIT"; \
     ld.lld --version; \
-    "$CLANG_DIR/bin/ld.lld" --version | grep -F 'Neutron LLD version 24.0.0git'; \
+    "$CLANG_DIR/bin/ld.lld" --version | grep -F 'Neutron LLD 24.0.0 ('; \
     "$CLANG_DIR/bin/ld.lld" --version | grep -F "$NEUTRON_LLVM_COMMIT"; \
     git init "$ANYKERNEL_DIR"; \
     git -C "$ANYKERNEL_DIR" remote add origin "$ANYKERNEL3_REPOSITORY"; \
