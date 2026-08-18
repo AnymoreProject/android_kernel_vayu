@@ -33,7 +33,7 @@ require_match Dockerfile 'neutron-clang-30072026\.tar\.zst'
 require_match Dockerfile 'clang --version'
 require_match Dockerfile 'ld\.lld --version'
 require_match Dockerfile '24\.0\.0git'
-require_match Dockerfile '17efc66a340e35ae03a18e34e7f267832fff7940'
+require_match Dockerfile 'NEUTRON_LLVM_COMMIT'
 require_match Dockerfile '^USER [^[:space:]]+'
 
 require_match docker-compose.yml '^services:'
