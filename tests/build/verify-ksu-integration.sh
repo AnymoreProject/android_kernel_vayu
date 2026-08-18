@@ -202,6 +202,7 @@ require_contains "security/selinux/avc.c" "susfs_is_avc_log_spoofing_enabled"
 require_contains "scripts/prepare-ksu-susfs.sh" "expected_uid_api_uses=24"
 require_contains "scripts/prepare-ksu-susfs.sh" "s/current_uid()\\.val/current_uid()/g"
 require_contains "scripts/prepare-ksu-susfs.sh" "s|<linux/pgtable.h>|<asm/pgtable.h>|"
+require_contains "scripts/prepare-ksu-susfs.sh" "s/__flush_icache_range/flush_icache_range/"
 bash -n "$ROOT_DIR/scripts/prepare-ksu-susfs.sh"
 
 compile_mode="${VERIFY_KERNEL_COMPILE:-auto}"
