@@ -122,6 +122,8 @@ grep -Fqx 'Linux version 4.14.357+17-perf' "$artifacts_dir/build-info.txt" ||
   fail 'missing kernel release metadata'
 grep -Fqx 'Neutron clang version 24.0.0git' "$artifacts_dir/build-info.txt" ||
   fail 'actual verified clang output was not recorded'
+grep -Fqx 'Neutron LLD version 24.0.0git' "$artifacts_dir/build-info.txt" ||
+  fail 'actual verified lld output was not recorded'
 grep -Fqx 'KBUILD_BUILD_USER=contract-user' "$artifacts_dir/build-info.txt" ||
   fail 'missing build user metadata'
 grep -Fqx 'KBUILD_BUILD_HOST=contract-host' "$artifacts_dir/build-info.txt" ||
