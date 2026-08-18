@@ -47,3 +47,12 @@ grep -Fq '#include <asm/pgtable.h>' "$sucompat_file" || {
   printf 'KernelSU sucompat pgtable compatibility include is missing\n' >&2
   exit 1
 }
+
+icache_file="$KSU_DIR/kernel/hook/arm64/patch_memory.c"
+if grep -Fq '#define ksu_flush_icache(start, end) __flush_icache_range' "$icache_file"; then
+  sed -i 's/__flush_icache_range/flush_icache_range/' "$icache_file"
+fi
+grep -Fq '#define ksu_flush_icache(start, end) flush_icache_range' "$icache_file" || {
+  printf 'KernelSU arm64 instruction-cache compatibility mapping is missing\n' >&2
+  exit 1
+}
