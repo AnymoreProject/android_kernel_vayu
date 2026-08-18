@@ -25,18 +25,22 @@ die() {
 
 require_neutron_tool() {
   local tool="$1"
+  local expected_identity="$2"
   local identity
   command -v "$tool" >/dev/null 2>&1 || die "required tool is not available: $tool"
   identity="$("$tool" --version 2>&1)" || die "cannot query $tool identity"
-  grep -Fq 'Neutron' <<<"$identity" || die "$tool is not a Neutron toolchain binary"
-  grep -Fq "$NEUTRON_LLVM_COMMIT" <<<"$identity" ||
+  grep -Fqx -- "$expected_identity" <<<"$identity" ||
+    die "$tool does not report expected identity: $expected_identity"
+  grep -Fqx -- "$NEUTRON_LLVM_COMMIT" <<<"$identity" ||
     die "$tool does not identify pinned Neutron LLVM $NEUTRON_LLVM_COMMIT"
 }
 
 [[ -x "$CLANG_DIR/bin/clang" ]] || die "clang is missing from CLANG_DIR: $CLANG_DIR"
 [[ -x "$CLANG_DIR/bin/ld.lld" ]] || die "ld.lld is missing from CLANG_DIR: $CLANG_DIR"
-require_neutron_tool clang
-require_neutron_tool ld.lld
+require_neutron_tool clang 'Neutron clang version 24.0.0git'
+require_neutron_tool ld.lld 'Neutron LLD version 24.0.0git'
+clang_identity="$(clang --version)"
+lld_identity="$(ld.lld --version)"
 
 git -C "$ROOT_DIR" submodule update --init --depth 1 KernelSU-Next
 bash "$ROOT_DIR/scripts/prepare-ksu-susfs.sh"
@@ -78,11 +82,10 @@ done
 
 cp "$OUT_DIR/.config" "$ARTIFACTS_DIR/kernel.config"
 kernel_sha="$(git -C "$ROOT_DIR" rev-parse HEAD)"
-compiler_identity="$(clang --version)"
 {
   printf 'Linux version %s\n' "$KERNEL_RELEASE"
-  printf 'Neutron clang version 24.0.0git\n'
-  printf '%s\n' "$NEUTRON_LLVM_COMMIT"
+  printf '%s\n' "$clang_identity"
+  printf '%s\n' "$lld_identity"
   printf 'Kernel source commit %s\n' "$kernel_sha"
   printf 'KernelSU-Next %s %s\n' "$KERNELSU_NEXT_VERSION" "$KERNELSU_NEXT_COMMIT"
   printf 'SuSFS %s %s\n' "$SUSFS_VERSION" "$SUSFS_COMMIT"
