@@ -198,7 +198,7 @@ require_line "fs/Makefile" 'obj-$(CONFIG_KSU_SUSFS) += susfs.o'
 require_contains "kernel/sys.c" "susfs_spoof_uname"
 require_contains "kernel/reboot.c" "ksu_handle_sys_reboot"
 require_contains "security/selinux/avc.c" "susfs_is_avc_log_spoofing_enabled"
-require_contains "scripts/prepare-ksu-susfs.sh" "expected_uid_api_uses=25"
+require_contains "scripts/prepare-ksu-susfs.sh" "expected_uid_api_uses=24"
 require_contains "scripts/prepare-ksu-susfs.sh" "s/current_uid()\\.val/current_uid()/g"
 require_contains "scripts/prepare-ksu-susfs.sh" "s|<linux/pgtable.h>|<asm/pgtable.h>|"
 bash -n "$ROOT_DIR/scripts/prepare-ksu-susfs.sh"
