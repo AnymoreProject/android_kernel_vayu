@@ -224,6 +224,7 @@ require_contains "scripts/prepare-ksu-susfs.sh" "0002-linux-4.14-file-wrapper.pa
 require_contains "scripts/prepare-ksu-susfs.sh" "0003-linux-4.14-seccomp-cache.patch"
 require_contains "scripts/prepare-ksu-susfs.sh" "0004-linux-4.14-mount-api.patch"
 require_contains "scripts/prepare-ksu-susfs.sh" "0005-linux-4.14-fsnotify.patch"
+require_contains "scripts/prepare-ksu-susfs.sh" "0006-linux-4.14-seccomp-state.patch"
 bash -n "$ROOT_DIR/scripts/prepare-ksu-susfs.sh"
 
 compile_mode="${VERIFY_KERNEL_COMPILE:-auto}"
