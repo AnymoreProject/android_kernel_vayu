@@ -37,6 +37,7 @@ source scripts/build-versions.env
 
 require_match Dockerfile '^FROM [^[:space:]]*ubuntu(:[^@[:space:]]+)?@sha256:[a-f0-9]{64}($|[[:space:]])'
 require_literal Dockerfile 'apt-get install -y --no-install-recommends'
+require_literal Dockerfile 'device-tree-compiler'
 require_literal Dockerfile 'NEUTRON_ARCHIVE_URL'
 require_literal Dockerfile 'NEUTRON_CATALOGUE_MANIFEST_URL'
 require_literal Dockerfile 'NEUTRON_ARCHIVE_SHA256'
