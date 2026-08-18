@@ -31,6 +31,16 @@ jobs:
           submodules: recursive
           fetch-depth: 0
 
+      - name: Prepare writable build directories
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p out artifacts
+          {
+            echo "HOST_UID=$(id -u)"
+            echo "HOST_GID=$(id -g)"
+          } >> "$GITHUB_ENV"
+
       - name: Check runner disk space
         shell: bash
         run: |
